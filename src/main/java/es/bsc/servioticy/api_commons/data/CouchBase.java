@@ -15,6 +15,7 @@
  ******************************************************************************/
 package es.bsc.servioticy.api_commons.data;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
@@ -22,6 +23,13 @@ import javax.ws.rs.core.Response;
 import net.spy.memcached.internal.OperationFuture;
 
 import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.protocol.views.Query;
+import com.couchbase.client.protocol.views.Stale;
+import com.couchbase.client.protocol.views.View;
+import com.couchbase.client.protocol.views.ViewResponse;
+import com.couchbase.client.protocol.views.ViewRow;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.bsc.servioticy.api_commons.exceptions.ServIoTWebApplicationException;
 import es.bsc.servioticy.api_commons.utils.Config;
@@ -65,4 +73,28 @@ public class CouchBase {
     }
     return null;
   }
+  
+  public String getAllSOs(String user_id) {
+    ArrayList<String> sos = new ArrayList<String>();
+    
+    View view = client.getView("user", "byUser");
+    Query query = new Query();
+    query.setRangeStart(user_id).setStale(Stale.FALSE);
+    ViewResponse result = client.query(view, query);
+    
+    for(ViewRow row : result) {
+      sos.add(row.getKey().substring(row.getKey().lastIndexOf("-")+1));
+    }
+    
+    ObjectMapper mapper = new ObjectMapper();
+    String str_sos = null;
+    try {
+      str_sos = mapper.writeValueAsString(sos);
+    } catch (JsonProcessingException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    }
+    
+    return str_sos;
+  }
+
 }
