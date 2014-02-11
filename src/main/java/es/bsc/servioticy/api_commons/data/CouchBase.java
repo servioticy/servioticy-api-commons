@@ -52,4 +52,17 @@ public class CouchBase {
 	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
 	  }
 	}
+	
+  /**
+   * @param user_id
+   * @param so_id
+   * @return
+   */
+  public SO getSO(String user_id, String so_id) {
+    String stored_so = (String)client.get(user_id + "-" + so_id);
+    if (stored_so != null) {
+      return new SO(user_id, so_id, stored_so);
+    }
+    return null;
+  }
 }
