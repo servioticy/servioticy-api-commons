@@ -96,5 +96,32 @@ public class CouchBase {
     
     return str_sos;
   }
+  
+  /** Store the new subscriptions
+   * 
+   * @param subs
+   */
+  public void setSubscription(Subscription subs) {
+      try {
+        OperationFuture<Boolean> setOp;
+        setOp = client.set(subs.getKey(), 0, subs.getString());
+          if (!setOp.get().booleanValue()) {
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+          }
+
+        // Update the SO stream with the subscription
+        subs.getSO().update();
+        setOp = client.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
+          if (!setOp.get().booleanValue()) {
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+          }
+        } catch (InterruptedException e) {
+          throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        } catch (ExecutionException e) {
+          throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        } catch (Exception e) {
+          throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        }
+  }
 
 }
