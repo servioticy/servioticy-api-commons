@@ -195,6 +195,10 @@ public class CouchBase {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
     }
   }
+  
+  public String getOpId(String key) {
+    return (String)cprivate.get(key);
+  }
 
   /**
    * @param user_id
