@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons.utils;
+package com.servioticy.api.commons.utils;
 
 import java.io.IOException;
-
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,10 +23,10 @@ import java.util.Properties;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import com.couchbase.client.CouchbaseClient;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 //http://stackoverflow.com/questions/3153739/config-files-for-a-webapplication-load-once-and-store-where !!!
 //http://stackoverflow.com/questions/11948321/reading-properties-file-only-once-while-web-app-deployment
@@ -36,8 +35,11 @@ public class Config implements ServletContextListener {
 
 	public static Properties config = new Properties();
 
-	public static CouchbaseClient client;
-	public static List<URI> uris = new LinkedList<URI>();
+	public static CouchbaseClient cpublic;
+	public static List<URI> public_uris = new LinkedList<URI>();
+
+	public static CouchbaseClient cprivate;
+	public static List<URI> private_uris = new LinkedList<URI>();
 	
     @Override
     public void contextInitialized(ServletContextEvent event) {
@@ -49,19 +51,22 @@ public class Config implements ServletContextListener {
         // Connect to Couchbase
         System.out.println("[SERVIOTICY-API] Connecting to Coubhbase");
 
-    	  String[] uri_array = config.getProperty("uris").split(";");
-    	  for (int i = 0; i < uri_array.length; i++) {
-    	    uris.add(URI.create(uri_array[i]));
+    	  String[] public_uri_array = config.getProperty("public_uris").split(";");
+    	  for (int i = 0; i < public_uri_array.length; i++) {
+    	    public_uris.add(URI.create(public_uri_array[i]));
+    		} 
+    	  String[] private_uri_array = config.getProperty("private_uris").split(";");
+    	  for (int i = 0; i < private_uri_array.length; i++) {
+    	    private_uris.add(URI.create(private_uri_array[i]));
     		} 
     	  try {
-    	    client = new CouchbaseClient(uris, config.getProperty("bucket_name"), "");
+    	    cpublic = new CouchbaseClient(public_uris, config.getProperty("public_bucket"), "");
+    	    cprivate = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
     	  } catch (Exception e) {
-    	    throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
+    	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
     	  }
       } catch (IOException e) {
-        throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-            .entity("Loading config failed = " + e.getMessage())
-            .build());
+        throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Loading config failed = " + e.getMessage());
       }
         event.getServletContext().setAttribute(ATTRIBUTE_NAME, this);
     }
@@ -71,11 +76,16 @@ public class Config implements ServletContextListener {
     	System.out.println("[SERVIOTICY-API] Closing Couchbase connection");
 		
     	// Disconnect to Couchbase
-    	client.shutdown();
+    	cpublic.shutdown();
+    	cprivate.shutdown();
     }
 
     public String getProperty(String key) {
         return config.getProperty(key);
+    }
+    
+    public static int getOpIdExpiration() {
+      return 5*60;
     }
 
 }

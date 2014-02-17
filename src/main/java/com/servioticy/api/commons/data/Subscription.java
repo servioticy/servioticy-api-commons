@@ -1,4 +1,4 @@
-package es.bsc.servioticy.api_commons.data;
+package com.servioticy.api.commons.data;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -9,13 +9,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import es.bsc.servioticy.api_commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Subscription {
   private static ObjectMapper mapper = new ObjectMapper();
 
-  private UUID uuid;
   private String subsKey, subsId;
   private SO so;
   private JsonNode subs_root = mapper.createObjectNode();
@@ -63,7 +61,7 @@ public class Subscription {
 		
 		// servioticy key = user_uuid + "-" + subs_uuid
 		// TODO improve key and subs_id generation
-		uuid = UUID.randomUUID(); //UUID java library
+		UUID uuid = UUID.randomUUID(); //UUID java library
 		
 		subsId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
 		subsKey= user_id + "-" + subsId;

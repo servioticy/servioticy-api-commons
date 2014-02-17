@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons.data;
+package com.servioticy.api.commons.data;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,8 +23,8 @@ import java.sql.Statement;
 
 import javax.ws.rs.core.Response;
 
-import es.bsc.servioticy.api_commons.exceptions.ServIoTWebApplicationException;
-import es.bsc.servioticy.api_commons.utils.Config;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.utils.Config;
 
 
 /** 

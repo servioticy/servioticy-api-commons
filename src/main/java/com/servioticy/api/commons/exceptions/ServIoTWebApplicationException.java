@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons;
+package com.servioticy.api.commons.exceptions;
 
-import java.sql.ResultSet;
+import java.util.Date;
 
-import es.bsc.servioticy.api_commons.data.SQLite;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-public class App {
-    public static void main( String[] args ) {
-      ResultSet rs;
+public class ServIoTWebApplicationException extends WebApplicationException{
+	private static final long serialVersionUID = -7634740164511860950L;
 
-      try {
-
-        SQLite db = new SQLite();
-        rs = db.queryDB("select * from user where api_token = '" + "holaaa" + "'");
-        System.out.println(rs);
-      } catch (ClassNotFoundException e) {
-        // TODO Auto-generated catch block
-        e.getMessage();
-        e.printStackTrace();
-      }
-        System.out.println( "Hello World!" );
+	public ServIoTWebApplicationException(Response.Status status, String message) {
+        super(Response.status(status)
+        				.entity(new ErrorInfo(status.getStatusCode(), message))
+        				.type(MediaType.APPLICATION_JSON)
+        				.header("Date", new Date(System.currentTimeMillis()))
+        				.header("Server", "api.servIoTicy")
+        				.build());
     }
+
 }

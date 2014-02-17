@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons.utils;
+package com.servioticy.api.commons.utils;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import es.bsc.servioticy.api_commons.data.SQLite;
-import es.bsc.servioticy.api_commons.exceptions.ServIoTWebApplicationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.servioticy.api.commons.data.SQLite;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 /*
  * Class to manage REST API Authorization

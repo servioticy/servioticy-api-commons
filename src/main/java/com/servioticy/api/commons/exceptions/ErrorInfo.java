@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons.exceptions;
+package com.servioticy.api.commons.exceptions;
 
 import javax.ws.rs.core.Response;
 

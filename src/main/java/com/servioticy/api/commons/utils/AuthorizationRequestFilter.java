@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package es.bsc.servioticy.api_commons.utils;
+package com.servioticy.api.commons.utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
