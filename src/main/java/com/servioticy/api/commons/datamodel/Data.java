@@ -67,7 +67,7 @@ public class Data {
       root = mapper.readTree(body);
       // Check if exists lastUpdate
       if (root.path("lastUpdate").isMissingNode())
-        throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The lastUpdate filed was not found");
+        throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The lastUpdate field was not found");
       ((ObjectNode)data_root).put(root.get("lastUpdate").asText(), root);
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
