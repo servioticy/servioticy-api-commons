@@ -77,6 +77,10 @@ public class CouchBase {
 	  }
 	}
 	
+  /**
+   * @param user_id
+   * @return all the Service Objects as String
+   */
   public String getAllSOs(String user_id) {
     ArrayList<String> sos = new ArrayList<String>();
     
@@ -154,6 +158,25 @@ public class CouchBase {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
     }
   }
+
+  /**
+   * @param user_id
+   * @param data_id
+   * @return
+   */
+  public Data getData(String user_id, String soId, String streamId) {
+    SO so = getSO(user_id, soId);
+    
+    JsonNode stream = so.getStream(streamId);
+
+    String data_id = stream.get("data").asText();
+    String stored_data = getJsonNode(user_id + "-" + data_id).toString();
+
+    if (stored_data != null) {
+      return new Data(user_id, data_id, stored_data);
+    }
+    return null;
+  }
   
   /**
    * @param key
@@ -196,22 +219,13 @@ public class CouchBase {
     }
   }
   
+  /**
+   * @param key
+   * @return the OpId as String
+   */
   public String getOpId(String key) {
     return (String)cprivate.get(key);
   }
 
-  /**
-   * @param user_id
-   * @param data_id
-   * @return
-   */
-//  public Data getData(String user_id, String data_id) {
-//    String stored_data = (String)client.get(user_id + "-" + data_id);
-//    if (stored_data != null) {
-//      return new Data(user_id, data_id, stored_data);
-//    }
-//    return null;
-//  }
-  
 
 }

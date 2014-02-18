@@ -24,6 +24,8 @@ public class ErrorInfo {
 	private String info;
 	private String defaultInfo = "api.servIoTicy.com";
 	
+	public ErrorInfo() {}
+
 	public ErrorInfo(int status, String message) {
 		this.status = status;
 		this.message = message;

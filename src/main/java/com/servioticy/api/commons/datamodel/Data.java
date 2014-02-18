@@ -1,11 +1,15 @@
 package com.servioticy.api.commons.datamodel;
 
 import java.io.IOException;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,6 +23,23 @@ public class Data {
   private String dataKey, dataId;
   private SO so;
   private JsonNode data_root = mapper.createObjectNode();
+  
+  /** Create a Data with a database stored Data
+   * 
+   * @param user_id
+   * @param dataId
+   * @param stored_data
+   */
+  public Data(String user_id, String dataId, String stored_data) {
+    try {
+      data_root = mapper.readTree(stored_data);
+      this.dataId = dataId;
+      this.dataKey = user_id + "-" + dataId;
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    }
+  }
+  
 
   /** Create a Data class
    * 
@@ -88,6 +109,28 @@ public class Data {
 //    ((ObjectNode)data_root).put(root.get("lastUpdate").asText(), root.asText());
 //    
 //  }
+  
+  /**
+   * @return the last JsonNode of Data
+   */
+  public JsonNode lastUpdate() {
+    JsonNode lastUpdate = null;
+    
+    try {
+//      Map<String, JsonNode> values = mapper.readValue(data_root.traverse(), new TypeReference<Map<String, JsonNode>>() {});
+//      List<JsonNode> list = new ArrayList<JsonNode>(values.values());
+//      lastUpdate = list.get(values.size() - 1).toString();
+      
+      NavigableMap<String, JsonNode> updates = mapper.readValue(data_root.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
+      Entry<String, JsonNode> lastEntry = updates.lastEntry();
+      lastUpdate = lastEntry.getValue();
+      
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    }
+    
+    return lastUpdate;
+  }
   
   /**
    * @return Data key
