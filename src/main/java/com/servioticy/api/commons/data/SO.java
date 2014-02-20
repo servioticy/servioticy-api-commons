@@ -18,6 +18,7 @@ package com.servioticy.api.commons.data;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -214,6 +215,35 @@ public class SO {
 //    
 //    return null;
 ////    return map.toString();
+	}
+	
+	/**
+	 * @return The streams in output format
+	 */
+	public String responseStreams() {
+	  
+	  JsonNode streams = so_root.path("streams");
+	  if (streams == null)
+	    throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No stremas in the Service Object");
+	  
+    JsonNode root = mapper.createObjectNode();
+    try {
+      Map<String, JsonNode> mstreams = mapper.readValue(streams.traverse(), new TypeReference<Map<String, JsonNode>>() {});
+      ArrayList<JsonNode> astreams = new ArrayList<JsonNode>();
+      JsonNode s = mapper.createObjectNode();
+      
+      for (Map.Entry<String, JsonNode> stream : mstreams.entrySet()) {
+        ((ObjectNode)s).put("name", stream.getKey());
+        ((ObjectNode)s).putAll((ObjectNode)stream.getValue());
+        ((ObjectNode)s).remove("data");
+        astreams.add(s);
+      }
+      ((ObjectNode)root).put("streams", mapper.readTree(mapper.writeValueAsString(astreams)));
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    }
+	  
+	  return root.toString();
 	}
   
 	/**
