@@ -35,34 +35,39 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 public class SO {
 	protected static ObjectMapper mapper = new ObjectMapper();
 	
-	protected String so_key, user_id, so_id;
-	protected JsonNode so_root = mapper.createObjectNode();
+	protected String soKey, userId, soId;
+	protected JsonNode soRoot = mapper.createObjectNode();
 	
 //	public SO() { }
 	
-	/** Create a Service Object only generating its key
+	/** Create a SO with a database stored Service Object
 	 * 
-	 * @param user_uuid
-	 * 
+	 * @param storedSO
 	 */
-	private SO(String user_uuid) {
-
-		UUID uuid = UUID.randomUUID();
-
-		// servioticy key = user_uuid + "-" + so_uuid
-		// TODO improve key and so_id generation
-		this.user_id = user_uuid;
-		so_id = String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-		so_key = user_uuid + "-" + so_id;
+	public SO(String storedSO) {
+		try {
+			soRoot = mapper.readTree(storedSO);
+			this.soId = soRoot.get("id").asText();
+			this.userId = soRoot.get("userId").asText();
+			this.soKey = soId;
+		} catch (Exception e) {
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+		}
 	}
 	
-	/** Create a Service Object
+	/** Create a new Service Object
 	 * 
-	 * @param user_uuid
+	 * @param userId
 	 * @param body
 	 */
-	public SO(String user_uuid, String body) {
-		this(user_uuid);
+	public SO(String userId, String body) {
+		UUID uuid = UUID.randomUUID();
+
+		// servioticy key = soId
+		// TODO improve key and soId generation
+		this.userId = userId;
+		soId = String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
+		soKey = soId;
 		
 		JsonNode root;
 
@@ -71,29 +76,43 @@ public class SO {
 		} catch (JsonProcessingException e) {
 		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
 		} catch (IOException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		}
 		
-		((ObjectNode)so_root).put("id", so_id);
-		((ObjectNode)so_root).putAll((ObjectNode)root);
-	}
-	
-	/** Create a SO with a database stored Service Object
-	 * 
-	 * @param user_uuid
-	 * @param so_id
-	 * @param stored_so
-	 */
-	public SO(String user_uuid, String so_id, String stored_so) {
-		try {
-			so_root = mapper.readTree(stored_so);
-			this.so_id = so_id;
-			this.user_id = user_uuid;
-			this.so_key = user_uuid + "-" + so_id;
-		} catch (Exception e) {
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+		((ObjectNode)soRoot).put("id", soId);
+		((ObjectNode)soRoot).put("userId", userId);
+		if (root.path("public").isMissingNode()) {
+		  ((ObjectNode)soRoot).put("public", "false");
+		} else {
+		  ((ObjectNode)soRoot).put("public", root.get("public").asText());
+		}
+		long time = System.currentTimeMillis();
+		((ObjectNode)soRoot).put("createdAt", time);
+    ((ObjectNode)soRoot).put("updatedAt", time);
+		((ObjectNode)soRoot).putAll((ObjectNode)root);
+		
+		// If is a CSO with groups field create the derivate subscriptions
+		if (!root.path("groups").isMissingNode()) {
+		  createGroupsSubscriptions(root.get("groups"));
 		}
 	}
+	
+//	/** Create a SO with a database stored Service Object
+//	 * 
+//	 * @param userId
+//	 * @param soId
+//	 * @param storedSO
+//	 */
+//	public SO(String userId, String soId, String storedSO) {
+//		try {
+//			soRoot = mapper.readTree(storedSO);
+//			this.soId = soId;
+//			this.userId = userId;
+//			this.soKey = soId;
+//		} catch (Exception e) {
+//			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//		}
+//	}
 	
 	/** Put the subscription id in the Service Object stream subscription array
 	 * 
@@ -121,11 +140,54 @@ public class SO {
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 	  
 	}
 	
+	/** Creating subscriptions for groups information
+	 * 
+	 * @param JsonNode representing groups information
+	 */
+	public void createGroupsSubscriptions(JsonNode root) {
+	  ArrayList<Group> agroups = new ArrayList<Group>();
+
+    try {
+      Map<String, JsonNode> groups = mapper.readValue(root.traverse(), new TypeReference<Map<String, JsonNode>>() {});
+      
+      // Fill the groups data
+      for (Map.Entry<String, JsonNode> group : groups.entrySet()) {
+        agroups.add(new Group(group.getValue(), group.getKey()));
+      }
+    } catch (JsonParseException e) {
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing groups");
+    } catch (JsonMappingException e) {
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error deserializing groups");
+    } catch (JsonProcessingException e) {
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error Json processing exception");
+    } catch (IOException e) {
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in groups field");
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+    
+    // Check that soIds has the stream
+    for (Group group : agroups) {
+      group.checkSoIdsStream();
+    }
+
+    // Now create the subscriptions
+    for (Group group : agroups) {
+      group.createSubscriptions(soId);
+    }
+	  
+	}
+	
+	/** Create the data field to refer stream data values
+	 * 
+	 * @param stream
+	 * @param dataId
+	 */
 	public void setData(JsonNode stream, String dataId) {
 	  ((ObjectNode)stream).put("data", dataId);
 	}
@@ -134,7 +196,7 @@ public class SO {
 //		JsonNode stream = getStream(streamId);
 //		String dataId;
 //
-//		// Check if exists this streamId in the Service Object
+//		// Check if exist this streamId in the Service Object
 //		if (stream == null)
 //			throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
 //		
@@ -152,6 +214,35 @@ public class SO {
 //		data.appendData(body);
 //		
 //	}
+	
+	/** Generate response to a SO creation
+	 * 
+	 * @return String
+	 */
+	public String responseCreateSO() {
+	  JsonNode root = mapper.createObjectNode();
+	  
+	  try {
+  	  ((ObjectNode)root).put("id", soId);
+	    ((ObjectNode)root).put("createdAt", soRoot.get("createdAt").asLong());
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+	  return root.toString();
+	}
+
+	/** Generate response to getting a SO
+	 * 
+	 * @return String
+	 */
+	public String responseGetSO() {
+    JsonNode root = soRoot;
+
+	  ((ObjectNode)root).remove("userId");
+ 	  ((ObjectNode)root).remove("data");
+
+	  return root.toString();
+	}
 	 
 	/** Return the subscriptions in output format
 	 * 
@@ -162,18 +253,17 @@ public class SO {
 	  
 	  JsonNode stream = getStream(streamId);
 
-		// Check if exists this streamId in the Service Object
+		// Check if exist this streamId in the Service Object
 		if (stream == null)
-			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No exists Stream: " + streamId + " in the Service Object");
+			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
 		
 		JsonNode subscriptions = stream.get("subscriptions");
 		// Check if there are subscriptions
-		if (subscriptions == null) 
-		    throw new ServIoTWebApplicationException(Response.Status.NO_CONTENT, "");
+		if (subscriptions == null) return null;
 
 		// iterate over the subscriptions id array, obtain the subscriptions and add to array with response fields
     CouchBase cb = new CouchBase();
-    SO subscription;
+    Subscription subscription;
 
     Iterator<JsonNode> subs = subscriptions.iterator();
 
@@ -181,7 +271,7 @@ public class SO {
     try {
       ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
       while (subs.hasNext()) {
-        subscription = cb.getSO(user_id, subs.next().asText());
+        subscription = cb.getSubscription(subs.next().asText());
         subsArray.add(mapper.readTree(subscription.getString()));
       }
 
@@ -191,7 +281,7 @@ public class SO {
     } catch (IOException e) {
 			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
     }catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 
     return root.toString();
@@ -217,14 +307,14 @@ public class SO {
 ////    return map.toString();
 	}
 	
-	/**
+	/** Return the streams in output format
+	 * 
 	 * @return The streams in output format
 	 */
 	public String responseStreams() {
 	  
-	  JsonNode streams = so_root.path("streams");
-	  if (streams == null)
-	    throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No stremas in the Service Object");
+	  JsonNode streams = soRoot.path("streams");
+	  if (streams == null) return null;
 	  
     JsonNode root = mapper.createObjectNode();
     try {
@@ -240,7 +330,7 @@ public class SO {
       }
       ((ObjectNode)root).put("streams", mapper.readTree(mapper.writeValueAsString(astreams)));
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 	  
 	  return root.toString();
@@ -250,28 +340,35 @@ public class SO {
 	 * @return Service Object as String
 	 */
 	public String getString() {
-		return so_root.toString();
+		return soRoot.toString();
 	}
 	
 	/** 
 	 * @return Service Object id
 	 */
 	public String getId() {
-		return so_id;
+		return soId;
 	}
 	
 	/**
 	 * @return the couchbase key
 	 */
 	public String getSOKey() {
-		return so_key;
+		return soKey;
 	}
 	
 	/**
-	 * @return the user uuid
+	 * @return the user Id
 	 */
-	public String getUser_uuid() {
-		return user_id;
+	public String getUserId() {
+		return userId;
+	}
+	
+	public boolean isPublic() {
+	  if (soRoot.path("public").equals("true")) {
+	    return true;
+	  }
+	  return false;
 	}
 	
 	/**
@@ -279,7 +376,7 @@ public class SO {
 	 * @return the streamId JsonNode
 	 */
 	public JsonNode getStream(String streamId) {
-	  return so_root.path("streams").get(streamId);
+	  return soRoot.path("streams").get(streamId);
 	}
 	
 //  // return ArrayList<String> with the subscriptions
@@ -299,7 +396,7 @@ public class SO {
 ////    } catch (IOException e) {
 ////      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscription array");
 //    } catch (Exception e) {
-//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //    }
 //    
 //    return subscriptions;
@@ -310,6 +407,6 @@ public class SO {
    */
   public void update() {
     // Update updatedAt time
-    ((ObjectNode)so_root).put("updatedAt", System.currentTimeMillis());
+    ((ObjectNode)soRoot).put("updatedAt", System.currentTimeMillis());
   }
 }

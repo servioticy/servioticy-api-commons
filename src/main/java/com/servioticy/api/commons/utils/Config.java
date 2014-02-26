@@ -63,7 +63,7 @@ public class Config implements ServletContextListener {
     	    cpublic = new CouchbaseClient(public_uris, config.getProperty("public_bucket"), "");
     	    cprivate = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
     	  } catch (Exception e) {
-    	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     	  }
       } catch (IOException e) {
         throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Loading config failed = " + e.getMessage());

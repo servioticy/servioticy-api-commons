@@ -15,16 +15,13 @@
  ******************************************************************************/
 package com.servioticy.api.commons.utils;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.data.SQLite;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
@@ -33,12 +30,11 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
  */
 public class Authorization {
 	private ResultSet rs;
-	private String user_uuid;
+	private String userId;
 	
 	public Authorization() {}
-	
-	public void checkAuthorization(MultivaluedMap<String, String> headerParams) {
-    
+
+	public Authorization(MultivaluedMap<String, String> headerParams) {
     // Check if exists request header Authorization
     String autorizationToken = headerParams.getFirst("Authorization");
     if (autorizationToken == null)
@@ -49,25 +45,31 @@ public class Authorization {
 			SQLite db = new SQLite();
 			rs = db.queryDB("select * from user where api_token = '" + autorizationToken + "'");
 			if (!rs.next())
-			  throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "");
+			  throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, null);
 
 			// Obtain the uuid from the autorizationToken
 			rs = db.queryDB("select uuid from user where api_token = '" + autorizationToken + "'");
 			if (!rs.next()) {
-			  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+			  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 			}
-			user_uuid = rs.getString("uuid");
+			userId = rs.getString("uuid");
 			
 			db.close();
 		} catch (ClassNotFoundException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		} catch (SQLException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		}
 	}
 	
+	public void checkAuthorization(SO so) {
+	  if (!so.getUserId().equals(userId) && !so.isPublic()) {
+      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized to obtain the Service Object");
+	  }
+	}
+	
 	public String getUserId() {
-		return user_uuid;
+		return userId;
 	}
 
 }

@@ -31,7 +31,7 @@ public class ErrorInfo {
 		this.message = message;
 		this.info = this.defaultInfo;
 		
-		customInfo(status);
+		if (message == null) customInfo(status);
 	}
 	
 	// Custom error messages

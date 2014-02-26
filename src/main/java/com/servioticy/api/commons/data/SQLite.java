@@ -45,10 +45,10 @@ public class SQLite{
 			
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		}
 	}
 	
@@ -56,7 +56,7 @@ public class SQLite{
 		try {
 			return statement.executeQuery(query);
 		} catch (SQLException e) {
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		}
 	}
 	
@@ -66,7 +66,7 @@ public class SQLite{
 			statement.close();
 			connection.close();
 		} catch (SQLException e) {
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		}
 	}
 

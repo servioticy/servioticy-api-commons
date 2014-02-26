@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2014 Barcelona Supercomputing Center (BSC)
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.servioticy.api.commons.datamodel;
 
 import java.io.IOException;
@@ -21,22 +36,22 @@ public class Data {
   protected static ObjectMapper mapper = new ObjectMapper();
   
   private String dataKey, dataId;
-  private SO so;
-  private JsonNode data_root = mapper.createObjectNode();
+  private SO soParent;
+  private JsonNode dataRoot = mapper.createObjectNode();
   
   /** Create a Data with a database stored Data
    * 
-   * @param user_id
+   * @param userId
    * @param dataId
    * @param stored_data
    */
-  public Data(String user_id, String dataId, String stored_data) {
+  public Data(String dataId, String stored_data) {
     try {
-      data_root = mapper.readTree(stored_data);
+      dataRoot = mapper.readTree(stored_data);
       this.dataId = dataId;
-      this.dataKey = user_id + "-" + dataId;
+      this.dataKey = dataId;
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
   }
   
@@ -48,15 +63,11 @@ public class Data {
    * @param streamId
    * @param body
    */
-  public Data(String user_id, String soId, String streamId, String body) {
+  public Data(SO so, String streamId, String body) {
     CouchBase cb = new CouchBase();
     
-    // Check if exists soId in the database
-    so = cb.getSO(user_id, soId);
-    if (so == null)
-      throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The Service Object was not found.");
-
-    JsonNode stream = so.getStream(streamId);
+		soParent = so;
+    JsonNode stream = soParent.getStream(streamId);
 
     // Check if exists this streamId in the Service Object
     if (stream == null)
@@ -68,7 +79,7 @@ public class Data {
       // Check if exists lastUpdate
       if (root.path("lastUpdate").isMissingNode())
         throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The lastUpdate field was not found");
-      ((ObjectNode)data_root).put(root.get("lastUpdate").asText(), root);
+      ((ObjectNode)dataRoot).put(root.get("lastUpdate").asText(), root);
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
@@ -76,22 +87,21 @@ public class Data {
     }
     
     // If Not exists generate the dataId and put in the SO stream data field
-    if (!stream.path("data").isMissingNode()) {
-      dataId = stream.get("data").asText();
-      dataKey= user_id + "-" + dataId;
-      JsonNode data = cb.getJsonNode(dataKey);
-      ((ObjectNode)data).putAll((ObjectNode)data_root);
-      data_root = data;
-      
-    }
-    else {
-      // servioticy key = user_uuid + "-" + data_uuid
-      // TODO improve key and subs_id generation
+    // else loaded
+    if (stream.path("data").isMissingNode()) {
+      // servioticy key = dataId
+      // TODO improve key and dataId generation
       UUID uuid = UUID.randomUUID(); //UUID java library
       dataId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-      dataKey= user_id + "-" + dataId;
-
-      so.setData(stream, dataId);
+      dataKey= dataId;
+      soParent.setData(stream, dataId);
+    }
+    else {
+      dataId = stream.get("data").asText();
+      dataKey= dataId;
+      JsonNode data = cb.getJsonNode(dataKey);
+      ((ObjectNode)data).putAll((ObjectNode)dataRoot);
+      dataRoot = data;
     }
   }
   
@@ -121,15 +131,44 @@ public class Data {
 //      List<JsonNode> list = new ArrayList<JsonNode>(values.values());
 //      lastUpdate = list.get(values.size() - 1).toString();
       
-      NavigableMap<String, JsonNode> updates = mapper.readValue(data_root.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
+      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
       Entry<String, JsonNode> lastEntry = updates.lastEntry();
       lastUpdate = lastEntry.getValue();
       
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
     
     return lastUpdate;
+  }
+
+	/** Generate response to last update of all data
+	 * 
+   * @return String
+   */
+  public String responseLastUpdate() {
+    String response = "{ \"data\": [ " + lastUpdate().toString() + " ] }";
+    return response;
+  } 
+
+  /** Generate response to getting all the Stream SO data
+   * 
+   * @return String
+   */
+  public String responseAllData() {
+    String values = null;
+    String response = null;
+    try {
+      // TODO evaluate performance
+//      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
+      TreeMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
+      values = updates.values().toString();
+      response = "{ \"data\": " + values + " }";
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+    
+    return response;
   }
   
   /**
@@ -143,14 +182,14 @@ public class Data {
    * @return Data as String
    */
   public String getString() {
-    return data_root.toString();
+    return dataRoot.toString();
   }
   
   /**
    * @return The Service Object data owner
    */
   public SO getSO() {
-    return so;
+    return soParent;
   }
   
   /** 

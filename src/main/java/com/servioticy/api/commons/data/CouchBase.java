@@ -45,14 +45,14 @@ public class CouchBase {
 	}
 	
   /**
-   * @param user_id
-   * @param so_id
+   * @param userId
+   * @param soId
    * @return
    */
-  public SO getSO(String user_id, String so_id) {
-    String stored_so = (String)cpublic.get(user_id + "-" + so_id);
-    if (stored_so != null) {
-      return new SO(user_id, so_id, stored_so);
+  public SO getSO(String soId) {
+    String storedSO = (String)cpublic.get(soId);
+    if (storedSO != null) {
+      return new SO(storedSO);
     }
     return null;
   }
@@ -66,31 +66,32 @@ public class CouchBase {
 	    // Asynchronous set
 	    OperationFuture<Boolean> setOp = cpublic.set(so.getSOKey(), 0, so.getString());
 	    if (!setOp.get().booleanValue()) {
-	      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+	      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 	    }
 	  } catch (InterruptedException e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 	  } catch (ExecutionException e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 	  } catch (Exception e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 	  }
 	}
 	
   /**
-   * @param user_id
+   * @param userId
    * @return all the Service Objects as String
    */
-  public String getAllSOs(String user_id) {
+  public String getAllSOs(String userId) {
     ArrayList<String> sos = new ArrayList<String>();
     
     View view = cpublic.getView("user", "byUser");
     Query query = new Query();
-    query.setRangeStart(user_id).setStale(Stale.FALSE);
+    query.setStale(Stale.FALSE);
     ViewResponse result = cpublic.query(view, query);
     
     for(ViewRow row : result) {
-      sos.add(row.getKey().substring(row.getKey().lastIndexOf("-")+1));
+      if (row.getKey() != null && row.getKey().equals(userId))
+        sos.add(row.getValue());
     }
     
     ObjectMapper mapper = new ObjectMapper();
@@ -98,10 +99,22 @@ public class CouchBase {
     try {
       str_sos = mapper.writeValueAsString(sos);
     } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
     
     return str_sos;
+  }
+
+  /**
+   * @param subsId
+   * @return
+   */
+  public Subscription getSubscription(String subsId) {
+    String storedSubs = (String)cpublic.get(subsId);
+    if (storedSubs != null) {
+      return new Subscription(storedSubs);
+    }
+    return null;
   }
   
   /** Store the new subscriptions
@@ -113,21 +126,21 @@ public class CouchBase {
       OperationFuture<Boolean> setOp;
       setOp = cpublic.set(subs.getKey(), 0, subs.getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
 
       // Update the SO stream with the subscription
       subs.getSO().update();
       setOp = cpublic.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 }
 
@@ -140,7 +153,7 @@ public class CouchBase {
       OperationFuture<Boolean> setOp;
       setOp = cpublic.set(data.getKey(), 0, data.getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
 
       // TODO -> to maintain as Subscription (array) -> to improve
@@ -148,32 +161,33 @@ public class CouchBase {
       data.getSO().update();
       setOp = cpublic.set(data.getSO().getSOKey(), 0, data.getSO().getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
   }
 
   /**
-   * @param user_id
+   * @param userId
    * @param data_id
    * @return
    */
-  public Data getData(String user_id, String soId, String streamId) {
-    SO so = getSO(user_id, soId);
+  public Data getData(SO so, String streamId) {
     
     JsonNode stream = so.getStream(streamId);
+    if (stream == null) return null;
 
-    String data_id = stream.get("data").asText();
-    String stored_data = getJsonNode(user_id + "-" + data_id).toString();
+    if (stream.path("data").isMissingNode()) return null;
+    String dataId = stream.get("data").asText();
+    String storedData = getJsonNode(dataId).toString();
 
-    if (stored_data != null) {
-      return new Data(user_id, data_id, stored_data);
+    if (storedData != null) {
+      return new Data(dataId, storedData);
     }
     return null;
   }
@@ -189,7 +203,7 @@ public class CouchBase {
     try {
       json = mapper.readTree((String)cpublic.get(key));
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
     if (json != null) {
       return json;
@@ -209,13 +223,13 @@ public class CouchBase {
     // Check to see if our set succeeded
     try {
       if (!setOp.get().booleanValue())
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
   }
   
