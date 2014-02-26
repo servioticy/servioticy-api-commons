@@ -202,9 +202,12 @@ public class CouchBase {
     JsonNode json;
     try {
       json = mapper.readTree((String)cpublic.get(key));
+    } catch (NullPointerException e) {
+      return null;
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
+
     if (json != null) {
       return json;
     }

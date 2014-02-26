@@ -38,7 +38,7 @@ public class Authorization {
     // Check if exists request header Authorization
     String autorizationToken = headerParams.getFirst("Authorization");
     if (autorizationToken == null)
-      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Error in Authorization Header");
+      throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "Missing Authorization Header");
 		
     // Check if exists user with token api
 		try {
@@ -54,8 +54,7 @@ public class Authorization {
 			}
 			userId = rs.getString("uuid");
 			
-			db.close();
-		} catch (ClassNotFoundException e) {
+			db.close(); } catch (ClassNotFoundException e) {
 		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 		} catch (SQLException e) {
 		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);

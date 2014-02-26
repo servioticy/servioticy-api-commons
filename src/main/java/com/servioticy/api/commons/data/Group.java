@@ -86,7 +86,7 @@ public class Group {
    */
   public JsonNode lastUpdate() {
     CouchBase cb = new CouchBase();
-    Data data;
+    Data data = null;
     ObjectNode lastUpdate = mapper.createObjectNode();
     ObjectNode nextLastUpdate = mapper.createObjectNode();
     SO so;
@@ -94,10 +94,14 @@ public class Group {
     for (String soId : soIds) {
       so = cb.getSO(soId);
       if (so == null)
-        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The Service Object: " + soId + " does not exist.");
-      data = cb.getData(so, streamId);
-      if (data == null) throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND,
-          "No data in the stream of the Service Object with soId: " + soId + "Or the Service Object does not have this stream" );
+        continue;
+      try {
+        data = cb.getData(so, streamId);
+      } catch (Exception e) {
+        continue;
+      }
+      if (data == null)
+        continue;
       nextLastUpdate = (ObjectNode)data.lastUpdate();
       if (lastUpdate.path("lastUpdate").asLong() < nextLastUpdate.get("lastUpdate").asLong()) {
         lastUpdate = nextLastUpdate;

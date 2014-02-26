@@ -99,7 +99,11 @@ public class Data {
     else {
       dataId = stream.get("data").asText();
       dataKey= dataId;
+
       JsonNode data = cb.getJsonNode(dataKey);
+      if (data == null)
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+
       ((ObjectNode)data).putAll((ObjectNode)dataRoot);
       dataRoot = data;
     }
