@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2014 Barcelona Supercomputing Center (BSC)
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,14 +36,14 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
 public class CouchBase {
-	private static CouchbaseClient cpublic;
-	private static CouchbaseClient cprivate;
-	
-	public CouchBase() {
-		cpublic = Config.cpublic;
-		cprivate = Config.cprivate;
-	}
-	
+  private static CouchbaseClient cpublic;
+  private static CouchbaseClient cprivate;
+
+  public CouchBase() {
+    cpublic = Config.cpublic;
+    cprivate = Config.cprivate;
+  }
+
   /**
    * @param userId
    * @param soId
@@ -56,44 +56,45 @@ public class CouchBase {
     }
     return null;
   }
-  
-	/**
-	 * @param so
-	 */
-	public void setSO(SO so) {
-		// TODO check to insert unique so_id
-	  try {
-	    // Asynchronous set
-	    OperationFuture<Boolean> setOp = cpublic.set(so.getSOKey(), 0, so.getString());
-	    if (!setOp.get().booleanValue()) {
-	      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	    }
-	  } catch (InterruptedException e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	  } catch (ExecutionException e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	  } catch (Exception e) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	  }
-	}
-	
+
+
+  /**
+   * @param so
+   */
+  public void setSO(SO so) {
+    // TODO check to insert unique so_id
+    try {
+      // Asynchronous set
+      OperationFuture<Boolean> setOp = cpublic.set(so.getSOKey(), 0, so.getString());
+      if (!setOp.get().booleanValue()) {
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      }
+    } catch (InterruptedException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    } catch (ExecutionException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+  }
+
   /**
    * @param userId
    * @return all the Service Objects as String
    */
   public String getAllSOs(String userId) {
     ArrayList<String> sos = new ArrayList<String>();
-    
+
     View view = cpublic.getView("user", "byUser");
     Query query = new Query();
     query.setStale(Stale.FALSE);
     ViewResponse result = cpublic.query(view, query);
-    
+
     for(ViewRow row : result) {
       if (row.getKey() != null && row.getKey().equals(userId))
         sos.add(row.getValue());
     }
-    
+
     ObjectMapper mapper = new ObjectMapper();
     String str_sos = null;
     try {
@@ -101,7 +102,7 @@ public class CouchBase {
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
-    
+
     return str_sos;
   }
 
@@ -116,9 +117,9 @@ public class CouchBase {
     }
     return null;
   }
-  
+
   /** Store the new subscriptions
-   * 
+   *
    * @param subs
    */
   public void setSubscription(Subscription subs) {
@@ -145,7 +146,7 @@ public class CouchBase {
 }
 
   /** Store new data
-   * 
+   *
    * @param data
    */
   public void setData(Data data) {
@@ -178,7 +179,7 @@ public class CouchBase {
    * @return
    */
   public Data getData(SO so, String streamId) {
-    
+
     JsonNode stream = so.getStream(streamId);
     if (stream == null) return null;
 
@@ -191,7 +192,7 @@ public class CouchBase {
     }
     return null;
   }
-  
+
   /**
    * @param key
    * @return JsonNode that represents the stored document
@@ -212,11 +213,11 @@ public class CouchBase {
       return json;
     }
     return null;
-    
+
   }
-  
-  /** Set the OpId control flow
-   * 
+
+  /** Set the OpId control flow.
+   *
    * @param key
    * @param exp -> expiration time
    */
@@ -235,7 +236,7 @@ public class CouchBase {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
   }
-  
+
   /**
    * @param key
    * @return the OpId as String

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2014 Barcelona Supercomputing Center (BSC)
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,25 +33,25 @@ public class Subscription {
   private SO soParent;
   private JsonNode subsRoot = mapper.createObjectNode();
 
-	/** Create a Subscription with a database stored Subscription
-	 * 
-	 * @param storedSubs
-	 */
-	public Subscription(String storedSubs) {
+  /** Create a Subscription with a database stored Subscription
+   *
+   * @param storedSubs
+   */
+  public Subscription(String storedSubs) {
     CouchBase cb = new CouchBase();
 
-		try {
-			subsRoot = mapper.readTree(storedSubs);
-			this.subsId = subsRoot.get("id").asText();
-			this.subsKey = subsId;
-			this.soParent = cb.getSO(subsRoot.get("source").asText());
-		} catch (Exception e) {
-			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-		}
-	}
-	
+    try {
+      subsRoot = mapper.readTree(storedSubs);
+      this.subsId = subsRoot.get("id").asText();
+      this.subsKey = subsId;
+      this.soParent = cb.getSO(subsRoot.get("source").asText());
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+  }
+
   /** Create a Subscription
-   * 
+   *
    * @param soId
    * @param streamId
    * @param body
@@ -59,12 +59,12 @@ public class Subscription {
   public Subscription(SO so, String streamId, String body) {
     JsonNode root;
 
-		soParent = so;
-		JsonNode stream = soParent.getStream(streamId);
+    soParent = so;
+    JsonNode stream = soParent.getStream(streamId);
 
-		// Check if exists this streamId in the Service Object
-		if (stream == null)
-			throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
+    // Check if exists this streamId in the Service Object
+    if (stream == null)
+      throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
 
     try {
       root = mapper.readTree(body);
@@ -74,66 +74,66 @@ public class Subscription {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 
-		// Check if exists callback field in body request
-		if (root.path("callback").isMissingNode())
-			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No callback in the request");
-		
-		// Check if exists destination field in body request
-		if (root.path("destination").isMissingNode())
-			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No destination in the request");
-		
-		// OK, create the subscription
-		
-		// servioticy key = subsId
-		// TODO improve key and subsId generation
-		UUID uuid = UUID.randomUUID(); //UUID java library
-		
-		subsId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-		subsKey= subsId;
+    // Check if exists callback field in body request
+    if (root.path("callback").isMissingNode())
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No callback in the request");
 
-		((ObjectNode)subsRoot).put("id", subsId);
-		long time = System.currentTimeMillis();
-		((ObjectNode)subsRoot).put("createdAt", time);
-		((ObjectNode)subsRoot).put("updatedAt", time);
-		((ObjectNode)subsRoot).put("callback", root.get("callback").asText());
-		((ObjectNode)subsRoot).put("source", soParent.getId());
-		((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
-	 	((ObjectNode)subsRoot).put("stream", streamId);
-		if (!root.path("customFields").isMissingNode())
-		  ((ObjectNode)subsRoot).put("customFields", root.get("customFields"));
-		if (!root.path("delay").isMissingNode())
-			((ObjectNode)subsRoot).put("delay", root.get("delay").asInt());
-		if (!root.path("expire").isMissingNode()) {
-			((ObjectNode)subsRoot).put("expire", root.get("expire").asInt());
-		}
-		
-		// Put the subscription id in the so stream subscription array
-		soParent.setSubscription(stream, subsId);
+    // Check if exists destination field in body request
+    if (root.path("destination").isMissingNode())
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No destination in the request");
+
+    // OK, create the subscription
+
+    // servioticy key = subsId
+    // TODO improve key and subsId generation
+    UUID uuid = UUID.randomUUID(); //UUID java library
+
+    subsId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
+    subsKey= subsId;
+
+    ((ObjectNode)subsRoot).put("id", subsId);
+    long time = System.currentTimeMillis();
+    ((ObjectNode)subsRoot).put("createdAt", time);
+    ((ObjectNode)subsRoot).put("updatedAt", time);
+    ((ObjectNode)subsRoot).put("callback", root.get("callback").asText());
+    ((ObjectNode)subsRoot).put("source", soParent.getId());
+    ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
+    ((ObjectNode)subsRoot).put("stream", streamId);
+    if (!root.path("customFields").isMissingNode())
+      ((ObjectNode)subsRoot).put("customFields", root.get("customFields"));
+    if (!root.path("delay").isMissingNode())
+      ((ObjectNode)subsRoot).put("delay", root.get("delay").asInt());
+    if (!root.path("expire").isMissingNode()) {
+      ((ObjectNode)subsRoot).put("expire", root.get("expire").asInt());
+    }
+
+    // Put the subscription id in the so stream subscription array
+    soParent.setSubscription(stream, subsId);
 
   }
-  
+
   /**
    * @return the couchbase Key
    */
   public String getKey() {
     return subsKey;
   }
-  
-	/** Generate response to a Subscription creation
-	 * 
-	 * @return
-	 */
-	public String responseCreateSubs() {
-	  JsonNode root = mapper.createObjectNode();
-	  
-	  try {
-  	  ((ObjectNode)root).put("id", subsId);
-	    ((ObjectNode)root).put("createdAt", subsRoot.get("createdAt").asLong());
+
+  /** Generate response to a Subscription creation
+   *
+   * @return
+   */
+  public String responseCreateSubs() {
+    JsonNode root = mapper.createObjectNode();
+
+    try {
+      ((ObjectNode)root).put("id", subsId);
+      ((ObjectNode)root).put("createdAt", subsRoot.get("createdAt").asLong());
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
-	  return root.toString();
-	}
+    return root.toString();
+  }
 
   /**
    * @return Subscription as String
@@ -148,7 +148,7 @@ public class Subscription {
   public SO getSO() {
     return soParent;
   }
-  
+
   /**
    * @return the Subscription Id
    */

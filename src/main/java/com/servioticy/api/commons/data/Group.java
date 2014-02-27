@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2014 Barcelona Supercomputing Center (BSC)
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,15 +30,15 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Group {
   private static ObjectMapper mapper = new ObjectMapper();
-  
+
   private String streamId, groupId;
   private ArrayList<String> soIds;
-  
-  /** Create a Group from a JsonNode document
-   * 
-   * @param root
+
+  /** Create a Group from a JsonNode document.
+   *
+   * @param root The JsonNode Root
    */
-  public Group(JsonNode root) {
+  public Group(final JsonNode root) {
     try {
       // Check if exist stream
       if (root.path("stream").isMissingNode())
@@ -46,24 +46,24 @@ public class Group {
       // Check if exist soIds
       if (root.path("soIds").isMissingNode())
         throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The soIds field was not found");
-      
-      streamId = ((ObjectNode)root).get("stream").asText();
+
+      streamId = ((ObjectNode) root).get("stream").asText();
       try {
         soIds = mapper.readValue(mapper.writeValueAsString(root.get("soIds")), new TypeReference<ArrayList<String>>() {});
       } catch (JsonProcessingException e) {
         throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "soIds has to be an array of Strings");
       }
-      
+
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
     }
-    
+
   }
 
-  /** Create a Group form a String
-   * 
+  /** Create a Group form a String.
+   *
    * @param body
    * @throws JsonProcessingException
    * @throws IOException
@@ -72,7 +72,7 @@ public class Group {
       this(mapper.readTree(body));
   }
 
-  /** Create a group with a groupId - to support CSOs 
+  /** Create a group with a groupId - to support CSOs
    * @param root
    * @param groupId
    */
@@ -80,7 +80,7 @@ public class Group {
     this(root);
     this.groupId = groupId;
   }
-  
+
   /**
    * @return The lastUpdate value of the streamId for all the soIds
    */
@@ -109,41 +109,41 @@ public class Group {
     }
     return lastUpdate;
   }
-  
+
   /** Create subscriptions to destination for all the soIds
-   * 
+   *
    * @param destination
    */
   public void createSubscriptions(String destination) {
     CouchBase cb = new CouchBase();
     SO so;
     String body;
-    
+
     if (this.groupId == null)
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 
     for (String soId : soIds) {
       so = cb.getSO(soId);
-      
+
       body = "{ " + "\"callback\" : " + "\"internal\", \"destination\":  \"" + destination + "\", \"customFields\": { \"groupId\": \"" + groupId + "\" }" + " }";
 
       // Create Subscription
       Subscription subs = new Subscription(so, streamId, body);
-    
+
       // Store in Couchbase
       cb.setSubscription(subs);
     }
-    
+
   }
-  
+
   /** Check Group - All soIds has to exist and to have the stream
-   * 
+   *
    */
   public void checkSoIdsStream() {
     CouchBase cb = new CouchBase();
     SO so;
     JsonNode stream;
-    
+
     for (String soId : soIds) {
       so = cb.getSO(soId);
       if (so == null)
