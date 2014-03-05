@@ -185,7 +185,9 @@ public class CouchBase {
 
     if (stream.path("data").isMissingNode()) return null;
     String dataId = stream.get("data").asText();
-    String storedData = getJsonNode(dataId).toString();
+//    String storedData = getJsonNode(dataId).toString();
+    JsonNode storedJsonData = getJsonNode(dataId);
+    String storedData = (storedJsonData != null) ? storedJsonData.toString() : null;
 
     if (storedData != null) {
       return new Data(dataId, storedData);
