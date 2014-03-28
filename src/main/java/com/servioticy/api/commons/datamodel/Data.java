@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
@@ -28,7 +27,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.servioticy.api.commons.data.CouchBase;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
@@ -64,7 +62,6 @@ public class Data {
    * @param body
    */
   public Data(SO so, String streamId, String body) {
-    CouchBase cb = new CouchBase();
 
     soParent = so;
     JsonNode stream = soParent.getStream(streamId);
@@ -73,56 +70,22 @@ public class Data {
     if (stream == null)
       throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
 
+    // Check if exists lastUpdate
     JsonNode root;
     try {
       root = mapper.readTree(body);
-      // Check if exists lastUpdate
       if (root.path("lastUpdate").isMissingNode())
         throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The lastUpdate field was not found");
-      ((ObjectNode)dataRoot).put(root.get("lastUpdate").asText(), root);
+      ((ObjectNode)dataRoot).putAll((ObjectNode)root);
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
     }
+    
+    dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asText();
 
-    // If Not exists generate the dataId and put in the SO stream data field
-    // else loaded
-    if (stream.path("data").isMissingNode()) {
-      // servioticy key = dataId
-      // TODO improve key and dataId generation
-      UUID uuid = UUID.randomUUID(); //UUID java library
-      dataId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-      dataKey= dataId;
-      soParent.setData(stream, dataId);
-    }
-    else {
-      dataId = stream.get("data").asText();
-      dataKey= dataId;
-
-      JsonNode data = cb.getJsonNode(dataKey);
-      if (data == null)
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-
-      ((ObjectNode)data).putAll((ObjectNode)dataRoot);
-      dataRoot = data;
-    }
   }
-
-//  public void appendData(String data) {
-//    JsonNode root;
-//
-//    try {
-//      root = mapper.readTree(data);
-//    } catch (JsonProcessingException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
-//    } catch (IOException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
-//    }
-//
-//    ((ObjectNode)data_root).put(root.get("lastUpdate").asText(), root.asText());
-//
-//  }
 
   /**
    * @return the last JsonNode of Data

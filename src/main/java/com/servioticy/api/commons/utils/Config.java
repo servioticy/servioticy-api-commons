@@ -35,10 +35,11 @@ public class Config implements ServletContextListener {
 
   public static Properties config = new Properties();
 
-  public static CouchbaseClient cpublic;
+  public static CouchbaseClient cli_so;
+  public static CouchbaseClient cli_data;
   public static List<URI> public_uris = new LinkedList<URI>();
 
-  public static CouchbaseClient cprivate;
+  public static CouchbaseClient cli_private;
   public static List<URI> private_uris = new LinkedList<URI>();
 
     @Override
@@ -60,8 +61,9 @@ public class Config implements ServletContextListener {
           private_uris.add(URI.create(private_uri_array[i]));
         }
         try {
-          cpublic = new CouchbaseClient(public_uris, config.getProperty("public_bucket"), "");
-          cprivate = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+          cli_so = new CouchbaseClient(public_uris, config.getProperty("so_bucket"), "");
+          cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
+          cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
         }
@@ -76,8 +78,9 @@ public class Config implements ServletContextListener {
       System.out.println("[SERVIOTICY-API] Closing Couchbase connection");
 
       // Disconnect to Couchbase
-      cpublic.shutdown();
-      cprivate.shutdown();
+      cli_so.shutdown();
+      cli_data.shutdown();
+      cli_private.shutdown();
     }
 
     public String getProperty(String key) {

@@ -183,38 +183,6 @@ public class SO {
 
   }
 
-  /** Create the data field to refer stream data values
-   *
-   * @param stream
-   * @param dataId
-   */
-  public void setData(JsonNode stream, String dataId) {
-    ((ObjectNode)stream).put("data", dataId);
-  }
-
-//  public void appendData(String streamId, String body) {
-//    JsonNode stream = getStream(streamId);
-//    String dataId;
-//
-//    // Check if exist this streamId in the Service Object
-//    if (stream == null)
-//      throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
-//
-//    CouchBase cb = new CouchBase();
-//    Data data;
-//    // Obtain or create new Data
-//    if (!stream.path("data").isMissingNode()) {
-//      dataId = stream.get("data").asText();
-//      data = cb.getData(user_id, dataId);
-//    } else {
-//      data = new Data(user_id);
-//      ((ObjectNode)stream).put("data", data.getId());
-//    }
-//
-//    data.appendData(body);
-//
-//  }
-
   /** Generate response to a SO creation
    *
    * @return String

@@ -36,12 +36,14 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
 public class CouchBase {
-  private static CouchbaseClient cpublic;
-  private static CouchbaseClient cprivate;
+  private static CouchbaseClient cli_so;
+  private static CouchbaseClient cli_data;
+  private static CouchbaseClient cli_private;
 
   public CouchBase() {
-    cpublic = Config.cpublic;
-    cprivate = Config.cprivate;
+    cli_so = Config.cli_so;
+    cli_data = Config.cli_data;
+    cli_private = Config.cli_private;
   }
 
   /**
@@ -50,7 +52,7 @@ public class CouchBase {
    * @return
    */
   public SO getSO(String soId) {
-    String storedSO = (String)cpublic.get(soId);
+    String storedSO = (String)cli_so.get(soId);
     if (storedSO != null) {
       return new SO(storedSO);
     }
@@ -65,7 +67,7 @@ public class CouchBase {
     // TODO check to insert unique so_id
     try {
       // Asynchronous set
-      OperationFuture<Boolean> setOp = cpublic.set(so.getSOKey(), 0, so.getString());
+      OperationFuture<Boolean> setOp = cli_so.set(so.getSOKey(), 0, so.getString());
       if (!setOp.get().booleanValue()) {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
@@ -85,10 +87,10 @@ public class CouchBase {
   public String getAllSOs(String userId) {
     ArrayList<String> sos = new ArrayList<String>();
 
-    View view = cpublic.getView("user", "byUser");
+    View view = cli_so.getView("user", "byUser");
     Query query = new Query();
     query.setStale(Stale.FALSE);
-    ViewResponse result = cpublic.query(view, query);
+    ViewResponse result = cli_so.query(view, query);
 
     for(ViewRow row : result) {
       if (row.getKey() != null && row.getKey().equals(userId))
@@ -111,7 +113,7 @@ public class CouchBase {
    * @return
    */
   public Subscription getSubscription(String subsId) {
-    String storedSubs = (String)cpublic.get(subsId);
+    String storedSubs = (String)cli_so.get(subsId);
     if (storedSubs != null) {
       return new Subscription(storedSubs);
     }
@@ -125,14 +127,14 @@ public class CouchBase {
   public void setSubscription(Subscription subs) {
     try {
       OperationFuture<Boolean> setOp;
-      setOp = cpublic.set(subs.getKey(), 0, subs.getString());
+      setOp = cli_so.set(subs.getKey(), 0, subs.getString());
       if (!setOp.get().booleanValue()) {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
 
       // Update the SO stream with the subscription
       subs.getSO().update();
-      setOp = cpublic.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
+      setOp = cli_so.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
       if (!setOp.get().booleanValue()) {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
@@ -152,18 +154,18 @@ public class CouchBase {
   public void setData(Data data) {
     try {
       OperationFuture<Boolean> setOp;
-      setOp = cpublic.set(data.getKey(), 0, data.getString());
+      setOp = cli_data.set(data.getKey(), 0, data.getString());
       if (!setOp.get().booleanValue()) {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
 
-      // TODO -> to maintain as Subscription (array) -> to improve
-      // Update the SO stream with the subscription
-      data.getSO().update();
-      setOp = cpublic.set(data.getSO().getSOKey(), 0, data.getSO().getString());
-      if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-      }
+//      // TODO -> to maintain as Subscription (array) -> to improve
+//      // Update the SO stream with the data
+//      data.getSO().update();
+//      setOp = cli_so.set(data.getSO().getSOKey(), 0, data.getSO().getString());
+//      if (!setOp.get().booleanValue()) {
+//        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//      }
     } catch (InterruptedException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (ExecutionException e) {
@@ -204,7 +206,7 @@ public class CouchBase {
 //    JsonNode json = mapper.createObjectNode();
     JsonNode json;
     try {
-      json = mapper.readTree((String)cpublic.get(key));
+      json = mapper.readTree((String)cli_so.get(key));
     } catch (NullPointerException e) {
       return null;
     } catch (Exception e) {
@@ -225,7 +227,7 @@ public class CouchBase {
    */
   public void setOpId(String key, int exp) {
     // Do an asynchronous set
-    OperationFuture<Boolean> setOp = cprivate.set(key, exp, "{}");
+    OperationFuture<Boolean> setOp = cli_private.set(key, exp, "{}");
     // Check to see if our set succeeded
     try {
       if (!setOp.get().booleanValue())
@@ -244,7 +246,7 @@ public class CouchBase {
    * @return the OpId as String
    */
   public String getOpId(String key) {
-    return (String)cprivate.get(key);
+    return (String)cli_private.get(key);
   }
 
 
