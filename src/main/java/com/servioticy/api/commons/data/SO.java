@@ -365,7 +365,7 @@ public class SO {
   }
 
   public boolean isPublic() {
-    if (soRoot.path("public").equals("true")) {
+    if (soRoot.get("public").asText().equals("true")) {
       return true;
     }
     return false;
