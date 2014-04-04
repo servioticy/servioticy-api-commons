@@ -11,9 +11,11 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
@@ -37,56 +39,32 @@ public class SearchEngine {
 	
 	}
 	
-	int getDataRange() {
-		
-		FilterBuilders.idsFilter().addIds("1", "4", "100");
-		
-		FilterBuilders.andFilter(
-			    FilterBuilders.rangeFilter("postDate").from("2010-03-01").to("2010-04-01"),
-			    FilterBuilders.prefixFilter("name.second", "ba")
-			    );
-		
-		
-		//FilterBuilders.idsFilter().addIds("1", "4", "100");
-		
-		//SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
-        //.setQuery(QueryBuilders.matchAllQuery()).execute().actionGet();
+	
+	public static List<String> searchUpdates(String stream, String SOid, SearchCriteria filter) {
+				
 		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
-        .setQuery(QueryBuilders.matchAllQuery())
-        .addAggregation(max("max").field("lastUpdate"))
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("couchbaseDocument.meta.id",SOid+"-"+stream+"-"))
+		.setPostFilter(filter.buildFilter())
         .execute().actionGet();
 		
+		List<String> res = new ArrayList<String>();
 		
 		if(response != null) {
 			SearchHits hits = response.getHits();
 			if(hits != null) {
 				long count = hits.getTotalHits();
-				if(count > 0) {
-					
+				if(count > 0) {				
 					Iterator<SearchHit> iter = hits.iterator();
 					while(iter.hasNext()) {
 						SearchHit hit = iter.next();
-						//System.out.println(hit.getSourceAsString());
-						System.out.println(hit.getId());
+						res.add(hit.getId());						
 					}
 				}
 			}
 		}
 		
-		Max max = response.getAggregations().get("max");
-        System.out.println(max.getName()+" : "+max.getValue());
-		
-		//System.out.println(response.toString());
-		
-        /*.addAggregation(terms("keys").field("key").size(3).order(Terms.Order.COUNT_DESC))
-        
-
-		Terms  terms = response.getAggregations().get("keys");
-		Collection<Terms.Bucket> buckets = terms.buckets();
-		assertThat(buckets.size(), equalTo(3));*/
-		
-		return 0;
+		return res; 		
 	}
 	
 	
@@ -128,8 +106,7 @@ public class SearchEngine {
 		return (long)max.getValue(); 
 	}
 	
-	public static List<String> getAllUpdatesId(String SOid, String stream) {
-		//https://github.com/elasticsearch/elasticsearch/blob/master/src/test/java/org/elasticsearch/search/aggregations/metrics/MaxTests.java		
+	public static List<String> getAllUpdatesId(String SOid, String stream) {		
 		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
 		.setQuery(QueryBuilders.matchPhrasePrefixQuery("couchbaseDocument.meta.id",SOid+"-"+stream+"-"))
