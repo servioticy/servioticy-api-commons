@@ -35,11 +35,11 @@ public class SearchCriteria {
 	public boolean 	geodistance = false;
 	
 	// GENERIC
-	public long 	 		pointlat;
-	public long 	 		pointlon;
+	public double 	 		pointlat;
+	public double 	 		pointlon;
 	
 	// DISTANCE
-	public long 	 		geodistancevalue;
+	public double 	 		geodistancevalue;
 	public String			geodistanceunit = "km";
 	
 	
@@ -47,10 +47,10 @@ public class SearchCriteria {
 	public boolean 	geoboundingbox = false;
 	
 	// BOX
-	public long 	 		geoboxupperleftlat;
-	public long 	 		geoboxupperleftlon;
-	public long 	 		geoboxbottomrightlat;
-	public long 	 		geoboxbottomrightlon;
+	public double 	 		geoboxupperleftlat;
+	public double 	 		geoboxupperleftlon;
+	public double 	 		geoboxbottomrightlat;
+	public double 	 		geoboxbottomrightlon;
 	
 	
 	// MATCH ********************************
@@ -85,7 +85,7 @@ public class SearchCriteria {
 		
 		if(timerange) {
 			
-			RangeFilterBuilder rangeFilter = FilterBuilders.rangeFilter("couchbaseDocument.doc.lastUpdate")
+			RangeFilterBuilder rangeFilter = FilterBuilders.rangeFilter("doc.lastUpdate")
             								.from(rangefrom).to(rangeto)
             								.includeLower(true).includeUpper(true);
 			//filter.append(rangeFilter.toString());
@@ -94,7 +94,7 @@ public class SearchCriteria {
 		
 		if(numericrange) {
 			
-			RangeFilterBuilder numericrangeFilter = FilterBuilders.rangeFilter("couchbaseDocument.doc."+numericrangefield)            						 
+			RangeFilterBuilder numericrangeFilter = FilterBuilders.rangeFilter("doc."+numericrangefield)            						 
 											.from(rangefrom).includeLower(true)
 											.to(rangeto).includeUpper(true);
 			
@@ -105,7 +105,7 @@ public class SearchCriteria {
 		
 		if(geodistance) {
 			
-			GeoDistanceFilterBuilder geodistanceFilter = FilterBuilders.geoDistanceFilter("couchbaseDocument.doc.location")
+			GeoDistanceFilterBuilder geodistanceFilter = FilterBuilders.geoDistanceFilter("doc.channels.location.current-value")
             								.distance(geodistancevalue, DistanceUnit.fromString(geodistanceunit))
             								.point(pointlat,pointlon);
             								 
@@ -115,7 +115,7 @@ public class SearchCriteria {
 		
 		if(geoboundingbox) {
 			
-			GeoBoundingBoxFilterBuilder geodbboxFilter = FilterBuilders.geoBoundingBoxFilter("couchbaseDocument.doc.location")
+			GeoBoundingBoxFilterBuilder geodbboxFilter = FilterBuilders.geoBoundingBoxFilter("doc.channels.location.current-value")
 											.topLeft(geoboxupperleftlat, geoboxupperleftlon)
 											.bottomRight(geoboxbottomrightlat, geoboxbottomrightlon);
             								
@@ -127,7 +127,7 @@ public class SearchCriteria {
 		
 		if(match) {
 			
-			TermFilterBuilder matchFilter = FilterBuilders.termFilter("couchbaseDocument.doc."+matchfield, matchstring);
+			TermFilterBuilder matchFilter = FilterBuilders.termFilter("doc."+matchfield, matchstring);
             								
             								 
 			//filter.append(matchFilter.toString());

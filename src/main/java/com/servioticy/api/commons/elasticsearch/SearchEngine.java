@@ -7,15 +7,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.query.AndFilterBuilder;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
@@ -40,11 +40,24 @@ public class SearchEngine {
 	}
 	
 	
-	public static List<String> searchUpdates(String stream, String SOid, SearchCriteria filter) {
+	public static List<String> searchUpdates(String SOid, String stream, SearchCriteria filter) {
 				
 		
+		SearchResponse scan  = client.prepareSearch("elastic").setTypes("couchbaseDocument")
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+		.setSearchType(SearchType.SCAN)
+		.setScroll(new TimeValue(60000))
+		.execute().actionGet();
+
+		
+		System.out.println("QUERY: "+client.prepareSearch("elastic").setTypes("couchbaseDocument")
+				.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+				.setPostFilter(filter.buildFilter()).toString());
+
+		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
-		.setQuery(QueryBuilders.matchPhrasePrefixQuery("couchbaseDocument.meta.id",SOid+"-"+stream+"-"))
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+		.setSize((int)scan.getHits().getTotalHits())
 		.setPostFilter(filter.buildFilter())
         .execute().actionGet();
 		
@@ -73,14 +86,14 @@ public class SearchEngine {
 		
 		OrFilterBuilder IdsFilter = FilterBuilders.orFilter();
 		for(String id : SOids)
-			IdsFilter.add(FilterBuilders.prefixFilter("couchbaseDocument.meta.id", id));
+			IdsFilter.add(FilterBuilders.prefixFilter("meta.id", id));
 		
 		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
 		.setFrom(0).setSize(1)
-        .setQuery(QueryBuilders.regexpQuery("couchbaseDocument.meta.id",".*-"+stream+"-.*"))
+        .setQuery(QueryBuilders.regexpQuery("meta.id",".*-"+stream+"-.*"))
         .setPostFilter(IdsFilter)
-        .addSort("couchbaseDocument.doc.lastUpdate", SortOrder.DESC)
+        .addSort("doc.lastUpdate", SortOrder.DESC)
         .execute().actionGet();
 		
 		if(response.getHits().getTotalHits() > 0)
@@ -92,24 +105,32 @@ public class SearchEngine {
 	
 	
 	
-	public static long getLastUpdate(String SOid, String stream) {
+	public static long getLastUpdateTimeStamp(String SOid, String stream) {
 		//https://github.com/elasticsearch/elasticsearch/blob/master/src/test/java/org/elasticsearch/search/aggregations/metrics/MaxTests.java		
 
 		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
-		.setQuery(QueryBuilders.matchPhrasePrefixQuery("couchbaseDocument.meta.id",SOid+"-"+stream+"-"))
-        .addAggregation(max("max").field("lastUpdate"))
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+		.addAggregation(max("max").field("lastUpdate"))
         .execute().actionGet();
 
 		Max max = response.getAggregations().get("max");
 		
-		return (long)max.getValue(); 
+		return (long)max.getValue();
+						
 	}
 	
 	public static List<String> getAllUpdatesId(String SOid, String stream) {		
 		
+		SearchResponse scan = client.prepareSearch("elastic").setTypes("couchbaseDocument")
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+		.setSearchType(SearchType.SCAN)
+		.setScroll(new TimeValue(60000))
+        .execute().actionGet();
+		
 		SearchResponse response = client.prepareSearch("elastic").setTypes("couchbaseDocument")
-		.setQuery(QueryBuilders.matchPhrasePrefixQuery("couchbaseDocument.meta.id",SOid+"-"+stream+"-"))
+		.setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id",SOid+"-"+stream+"-"))
+		.setSize((int)scan.getHits().getTotalHits())
         .execute().actionGet();
 		
 		List<String> res = new ArrayList<String>();

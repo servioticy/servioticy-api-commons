@@ -198,6 +198,7 @@ public class CouchBase {
    */
   public Data getData(String SoID, String streamId, long timestamp) {
 	String dataId = SoID+"-"+streamId+"-"+timestamp;
+	System.out.println("Searching for "+dataId);
     String storedData = (String)cli_data.get(dataId);
     if (storedData != null) {
       return new Data(dataId,storedData);
@@ -226,7 +227,17 @@ public class CouchBase {
     }
     return null;
   }
+  
+  public void deleteData(String id) {
+	  cli_data.delete(id);
+  }
 
+
+  public void deleteSO(String id) {
+	  cli_so.delete(id);
+  }
+  
+  
   /**
    * @param key
    * @return JsonNode that represents the stored document

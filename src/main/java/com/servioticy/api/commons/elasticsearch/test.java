@@ -14,13 +14,15 @@ public class test {
 	public static void main(String[] args) {
 		
 		
-		/*long lastUpdate;
-		lastUpdate = SearchEngine.getLastUpdate("139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c8","location");
+		long lastUpdate;
+		lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","location");
 		System.out.println(lastUpdate);
-		lastUpdate = SearchEngine.getLastUpdate("139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c9","location");
+		lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fa1","location");
 		System.out.println(lastUpdate);
-		lastUpdate = SearchEngine.getLastUpdate("139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c8","foo");
-		System.out.println(lastUpdate);*/
+		lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","foo");
+		System.out.println(lastUpdate);
+		
+		return;
 		
 		/*List<String> IDs = new ArrayList<String>(); 
 		IDs.add("139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c8");
@@ -29,7 +31,7 @@ public class test {
 		String groupLastUpdate = SearchEngine.getGropLastUpdateDocId("location",IDs);
 	    System.out.println(groupLastUpdate);*/
 		
-		String testJson = "{\"timerange\":true,\"rangefrom\":13,\"rangeto\":17}";
+		/*String testJson = "{\"timerange\":true,\"rangefrom\":13,\"rangeto\":17}";
 		SearchCriteria test = SearchCriteria.buildFromJson(testJson);
 		if(test != null) {
 			//System.out.println(test.toString());
@@ -103,7 +105,7 @@ public class test {
 			System.out.println("Error building SearchCriteria object from Json");
 
 	
-		testJson = "{\"numericrange\":true,\"rangefrom\":13,\"rangeto\":17,\"numericrangefield\":\"foo.field2\",\"timerange\":true,\"rangefrom\":13,\"match\":true,\"matchfield\":\"foo.field1\",\"matchstring\":\"value1 value2\",\"geoboundingbox\":true,\"geoboxupperleftlat\":43.15,\"geoboxupperleftlat\":15.43,\"geoboxbottomrightlat\":47.15,\"geoboxbottomrightlon\":15.47}";
+		testJson = "{\"numericrange\":true,\"rangefrom\":13,\"rangeto\":17,\"numericrangefield\":\"channels.age.current-value\",\"timerange\":true,\"rangefrom\":1396859660,\"match\":true,\"matchfield\":\"channels.name.current-value\",\"matchstring\":\"Peter John\",\"geoboundingbox\":true,\"geoboxupperleftlat\":43.15,\"geoboxupperleftlat\":15.43,\"geoboxbottomrightlat\":47.15,\"geoboxbottomrightlon\":15.47}";
 		test = SearchCriteria.buildFromJson(testJson);
 		if(test != null) {
 			//System.out.println(test.toString());
@@ -114,7 +116,7 @@ public class test {
 			System.out.println("Error building SearchCriteria object from Json");
 
 		
-		
+		*/
 		
 	}
 

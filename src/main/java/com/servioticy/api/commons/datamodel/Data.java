@@ -82,8 +82,8 @@ public class Data {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
     }
     
-    dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asText();
-
+    dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
+    
   }
 
 
