@@ -16,8 +16,7 @@
 package com.servioticy.api.commons.datamodel;
 
 import java.io.IOException;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import javax.ws.rs.core.Response;
@@ -33,10 +32,11 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 public class Data {
   protected static ObjectMapper mapper = new ObjectMapper();
 
-  private String dataKey, dataId;
+  private String dataKey;
   private SO soParent;
   private JsonNode dataRoot = mapper.createObjectNode();
 
+    
   /** Create a Data with a database stored Data
    *
    * @param userId
@@ -46,7 +46,6 @@ public class Data {
   public Data(String dataId, String stored_data) {
     try {
       dataRoot = mapper.readTree(stored_data);
-      this.dataId = dataId;
       this.dataKey = dataId;
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
@@ -83,38 +82,17 @@ public class Data {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
     }
     
-    dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asText();
-
+    dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
+    
   }
 
-  /**
-   * @return the last JsonNode of Data
-   */
-  public JsonNode lastUpdate() {
-    JsonNode lastUpdate = null;
-
-    try {
-//      Map<String, JsonNode> values = mapper.readValue(data_root.traverse(), new TypeReference<Map<String, JsonNode>>() {});
-//      List<JsonNode> list = new ArrayList<JsonNode>(values.values());
-//      lastUpdate = list.get(values.size() - 1).toString();
-
-      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      Entry<String, JsonNode> lastEntry = updates.lastEntry();
-      lastUpdate = lastEntry.getValue();
-
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    }
-
-    return lastUpdate;
-  }
 
   /** Generate response to last update of all data
    *
    * @return String
    */
   public String responseLastUpdate() {
-    String response = "{ \"data\": [ " + lastUpdate().toString() + " ] }";
+    String response = "{ \"data\": [ " + dataRoot.toString() + " ] }";
     return response;
   }
 
@@ -122,20 +100,23 @@ public class Data {
    *
    * @return String
    */
-  public String responseAllData() {
-    String values = null;
-    String response = null;
-    try {
-      // TODO evaluate performance
-//      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      TreeMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      values = updates.values().toString();
-      response = "{ \"data\": " + values + " }";
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+  public static String responseAllData(List<Data> updates) {
+    StringBuilder res = new StringBuilder();
+    res.append("{ \"data\": [");
+    
+    boolean first = true;
+    for(Data update : updates) {    	
+    	if(first) 
+    		first=false;    		
+    	else
+    		res.append(",");
+    		    	
+    	res.append(update.getString());    	
     }
-
-    return response;
+    
+    res.append("]}");
+    
+    return res.toString();
   }
 
   /**
@@ -155,15 +136,10 @@ public class Data {
   /**
    * @return The Service Object data owner
    */
-  public SO getSO() {
+ /* public SO getSO() {
     return soParent;
-  }
+  }*/
 
-  /**
-   * @return Data id
-   */
-  public String getId() {
-    return dataId;
-  }
+
 
 }

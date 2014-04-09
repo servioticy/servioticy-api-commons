@@ -47,7 +47,6 @@ public class CouchBase {
   }
 
   /**
-   * @param userId
    * @param soId
    * @return
    */
@@ -60,6 +59,9 @@ public class CouchBase {
   }
 
 
+ 
+  
+  
   /**
    * @param so
    */
@@ -175,6 +177,35 @@ public class CouchBase {
     }
   }
 
+  
+  /**
+   * @param dataId
+   * @return
+   */
+  public Data getData(String dataId) {
+    String storedData = (String)cli_data.get(dataId);
+    if (storedData != null) {
+      return new Data(dataId,storedData);
+    }
+    return null;
+  }
+  
+  /**
+   * @param soId
+   * @param streamId
+   * @param timestamp
+   * @return
+   */
+  public Data getData(String SoID, String streamId, long timestamp) {
+	String dataId = SoID+"-"+streamId+"-"+timestamp;
+	System.out.println("Searching for "+dataId);
+    String storedData = (String)cli_data.get(dataId);
+    if (storedData != null) {
+      return new Data(dataId,storedData);
+    }
+    return null;
+  }
+  
   /**
    * @param userId
    * @param data_id
@@ -196,7 +227,17 @@ public class CouchBase {
     }
     return null;
   }
+  
+  public void deleteData(String id) {
+	  cli_data.delete(id);
+  }
 
+
+  public void deleteSO(String id) {
+	  cli_so.delete(id);
+  }
+  
+  
   /**
    * @param key
    * @return JsonNode that represents the stored document

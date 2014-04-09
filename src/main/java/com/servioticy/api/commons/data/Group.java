@@ -17,6 +17,7 @@ package com.servioticy.api.commons.data;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.core.Response;
 
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.datamodel.Data;
+import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Group {
@@ -84,14 +86,14 @@ public class Group {
   /**
    * @return The lastUpdate value of the streamId for all the soIds
    */
-  public JsonNode lastUpdate() {
+  public String lastUpdate() {
     CouchBase cb = new CouchBase();
     Data data = null;
-    ObjectNode lastUpdate = mapper.createObjectNode();
-    ObjectNode nextLastUpdate = mapper.createObjectNode();
-    SO so;
+    //ObjectNode lastUpdate = mapper.createObjectNode();
+    //ObjectNode nextLastUpdate = mapper.createObjectNode();
+    //SO so;
 
-    for (String soId : soIds) {
+    /*for (String soId : soIds) {
       so = cb.getSO(soId);
       if (so == null)
         continue;
@@ -106,8 +108,12 @@ public class Group {
       if (lastUpdate.path("lastUpdate").asLong() < nextLastUpdate.get("lastUpdate").asLong()) {
         lastUpdate = nextLastUpdate;
       }
-    }
-    return lastUpdate;
+    }*/
+   
+	String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId,soIds);
+	data = cb.getData(groupLastUpdateDataID);
+	
+    return data.getString();
   }
 
   /** Create subscriptions to destination for all the soIds
