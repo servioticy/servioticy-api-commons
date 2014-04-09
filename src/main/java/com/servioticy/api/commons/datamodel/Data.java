@@ -36,7 +36,7 @@ public class Data {
   private SO soParent;
   private JsonNode dataRoot = mapper.createObjectNode();
 
-    
+
   /** Create a Data with a database stored Data
    *
    * @param userId
@@ -81,9 +81,9 @@ public class Data {
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
     }
-    
+
     dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
-    
+
   }
 
 
@@ -103,19 +103,19 @@ public class Data {
   public static String responseAllData(List<Data> updates) {
     StringBuilder res = new StringBuilder();
     res.append("{ \"data\": [");
-    
+
     boolean first = true;
-    for(Data update : updates) {    	
-    	if(first) 
-    		first=false;    		
-    	else
-    		res.append(",");
-    		    	
-    	res.append(update.getString());    	
+    for(Data update : updates) {
+        if(first)
+            first=false;
+        else
+            res.append(",");
+
+        res.append(update.getString());
     }
-    
+
     res.append("]}");
-    
+
     return res.toString();
   }
 

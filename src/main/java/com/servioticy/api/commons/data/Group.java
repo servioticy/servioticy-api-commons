@@ -109,10 +109,10 @@ public class Group {
         lastUpdate = nextLastUpdate;
       }
     }*/
-   
-	String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId,soIds);
-	data = cb.getData(groupLastUpdateDataID);
-	
+
+    String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId,soIds);
+    data = cb.getData(groupLastUpdateDataID);
+
     return data.getString();
   }
 
