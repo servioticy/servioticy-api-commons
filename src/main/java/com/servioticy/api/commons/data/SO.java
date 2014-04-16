@@ -106,9 +106,6 @@ public class SO {
 	JsonNode root;
 	try {
 	  root = mapper.readTree(body);
-	  if (!root.path("public").isMissingNode()) {
-	    ((ObjectNode)soRoot).put("public", root.get("public").asText());
-      }
       if (!root.path("customFields").isMissingNode()) {
         // TODO improve check jsonNode parsing
         ((ObjectNode)soRoot).put("customFields", root.get("customFields"));
@@ -237,34 +234,16 @@ public class SO {
     if (stream == null)
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
 
-//    // Get the Service Object Data
+    // Get the Subscriptions
     List<String> IDs = SearchEngine.getAllSubscriptionsByStream(soId, streamId);
-//    List<Subscription> subsItems = new ArrayList<Subscription>();
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     CouchBase cb = new CouchBase();
-
-//    JsonNode subscriptions = stream.get("subscriptions");
-//    // Check if there are subscriptions
-//    if (subscriptions == null) return null;
-//
-//    // iterate over the subscriptions id array, obtain the subscriptions and add to array with response fields
-//    CouchBase cb = new CouchBase();
-//    Subscription subscription;
-//
-//    Iterator<JsonNode> subs = subscriptions.iterator();
 
     JsonNode root = mapper.createObjectNode();
     try {
     	for(String id : IDs)
     		subsArray.add(mapper.readTree(cb.getSubscription(id).getString()));
-//      ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
-//      subsArray.add(mapper.readTree(subscription.getString()));
-//      while (subs.hasNext()) {
-//        subscription = cb.getSubscription(subs.next().asText());
-//        subsArray.add(mapper.readTree(subscription.getString()));
-//      }
-
       ((ObjectNode)root).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subsArray)));
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");

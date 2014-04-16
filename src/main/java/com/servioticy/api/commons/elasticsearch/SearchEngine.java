@@ -148,11 +148,13 @@ public class SearchEngine {
         SearchResponse scan = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id", soId + "-" + streamId + "-"))
                 .setSearchType(SearchType.SCAN)
+                .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.matchPhrasePrefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
 
@@ -213,31 +215,16 @@ public class SearchEngine {
         return res;
     }
 
-    public static List<String> getGroupSusbcriptionDocId(String subId) {
+    public static String getSusbcriptionDocId(String subId) {
 
         SearchResponse response = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.regexpQuery("meta.id",".*-.*-"+subId))
+                .setQuery(QueryBuilders.matchQuery("meta.id", subId))
                 .execute().actionGet();
-        
-        
-        List<String> res = new ArrayList<String>();
-        
-        if(response != null) {
-            SearchHits hits = response.getHits();
-            if(hits != null) {
-                long count = hits.getTotalHits();
-                if(count > 0) {
-                    Iterator<SearchHit> iter = hits.iterator();
-                    while(iter.hasNext()) {
-                        SearchHit hit = iter.next();
-                        res.add(hit.getId());
-                    }
-                }
-            }
-        }
 
-       return res;
-     
+        if(response.getHits().getTotalHits() > 0)
+            return response.getHits().getHits()[0].getId();
+        else
+            return null;
     }
 
 

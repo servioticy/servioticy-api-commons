@@ -16,6 +16,7 @@
 package com.servioticy.api.commons.data;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.servioticy.api.commons.datamodel.Data;
+import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
@@ -113,9 +115,14 @@ public class CouchBase {
    * @return
    */
   public Subscription getSubscription(String subsId) {
-    String storedSubs = (String)cli_subscriptions.get(subsId);
+    // Get the Subscriptions
+    String subsKey = SearchEngine.getSusbcriptionDocId(subsId);
+    if (subsKey == null)
+    	return null;
+
+    String storedSubs = (String)cli_subscriptions.get(subsKey);
     if (storedSubs != null) {
-      return new Subscription(storedSubs);
+      return new Subscription(storedSubs, subsKey);
     }
     return null;
   }
@@ -235,8 +242,20 @@ public class CouchBase {
       cli_so.delete(id);
   }
 
-  public void deleteSubscription(String id) {
-      cli_subscriptions.delete(id);
+  public void deleteSubscription(String subsKey) {
+	try {
+	  // Asynchronous delete
+	  OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
+	  if (!deleteOp.get().booleanValue()) {
+	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	  }
+	} catch (InterruptedException e) {
+	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	} catch (ExecutionException e) {
+	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	} catch (Exception e) {
+	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	}
   }
 
   /**
