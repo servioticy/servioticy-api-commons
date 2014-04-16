@@ -88,8 +88,8 @@ public class Subscription {
     // TODO improve key and subsId generation
     UUID uuid = UUID.randomUUID(); //UUID java library
 
-    subsId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-    subsKey= subsId;
+    subsId= uuid.toString().replaceAll("-", "");
+    subsKey= soParent.getId() + "-" + streamId + "-" + subsId;
 
     ((ObjectNode)subsRoot).put("id", subsId);
     long time = System.currentTimeMillis();
@@ -107,8 +107,8 @@ public class Subscription {
       ((ObjectNode)subsRoot).put("expire", root.get("expire").asInt());
     }
 
-    // Put the subscription id in the so stream subscription array
-    soParent.setSubscription(stream, subsId);
+//    // Put the subscription id in the so stream subscription array
+//    soParent.setSubscription(stream, subsId);
 
   }
 

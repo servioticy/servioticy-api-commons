@@ -38,11 +38,13 @@ import com.servioticy.api.commons.utils.Config;
 public class CouchBase {
   private static CouchbaseClient cli_so;
   private static CouchbaseClient cli_data;
+  private static CouchbaseClient cli_subscriptions;
   private static CouchbaseClient cli_private;
 
   public CouchBase() {
     cli_so = Config.cli_so;
     cli_data = Config.cli_data;
+    cli_subscriptions = Config.cli_subscriptions;
     cli_private = Config.cli_private;
   }
 
@@ -129,17 +131,17 @@ public class CouchBase {
   public void setSubscription(Subscription subs) {
     try {
       OperationFuture<Boolean> setOp;
-      setOp = cli_so.set(subs.getKey(), 0, subs.getString());
+      setOp = cli_subscriptions.set(subs.getKey(), 0, subs.getString());
       if (!setOp.get().booleanValue()) {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
       }
 
-      // Update the SO stream with the subscription
-      subs.getSO().update();
-      setOp = cli_so.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
-      if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-      }
+//      // Update the SO stream with the subscription
+//      subs.getSO().update();
+//      setOp = cli_so.set(subs.getSO().getSOKey(), 0, subs.getSO().getString());
+//      if (!setOp.get().booleanValue()) {
+//        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//      }
     } catch (InterruptedException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     } catch (ExecutionException e) {
