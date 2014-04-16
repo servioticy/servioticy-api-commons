@@ -21,6 +21,8 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.sort.SortOrder;
 
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+
 public class SearchEngine {
 //Query by prefix:
     //{"query":{"bool":{"must":[{"prefix":{"couchbaseDocument.meta.id":"139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c8"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"facets":{}}
@@ -211,4 +213,34 @@ public class SearchEngine {
         return res;
     }
 
+    public static List<String> getGroupSusbcriptionDocId(String subId) {
+
+        SearchResponse response = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
+                .setQuery(QueryBuilders.regexpQuery("meta.id",".*-.*-"+subId))
+                .execute().actionGet();
+        
+        
+        List<String> res = new ArrayList<String>();
+        
+        if(response != null) {
+            SearchHits hits = response.getHits();
+            if(hits != null) {
+                long count = hits.getTotalHits();
+                if(count > 0) {
+                    Iterator<SearchHit> iter = hits.iterator();
+                    while(iter.hasNext()) {
+                        SearchHit hit = iter.next();
+                        res.add(hit.getId());
+                    }
+                }
+            }
+        }
+
+       return res;
+     
+    }
+
+
 }
+
+
