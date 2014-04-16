@@ -37,6 +37,7 @@ public class Config implements ServletContextListener {
 
   public static CouchbaseClient cli_so;
   public static CouchbaseClient cli_data;
+  public static CouchbaseClient cli_subscriptions;
   public static List<URI> public_uris = new LinkedList<URI>();
 
   public static CouchbaseClient cli_private;
@@ -63,6 +64,7 @@ public class Config implements ServletContextListener {
         try {
           cli_so = new CouchbaseClient(public_uris, config.getProperty("so_bucket"), "");
           cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
+          cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
@@ -80,6 +82,7 @@ public class Config implements ServletContextListener {
       // Disconnect to Couchbase
       cli_so.shutdown();
       cli_data.shutdown();
+      cli_subscriptions.shutdown();
       cli_private.shutdown();
     }
 

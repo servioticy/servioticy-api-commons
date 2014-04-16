@@ -114,36 +114,36 @@ public class SO {
 //    }
 //  }
 
-  /** Put the subscription id in the Service Object stream subscription array
-   *
-   * @param stream
-   * @param subsId
-   */
-  public void setSubscription(JsonNode stream, String subsId) {
-    ArrayList<String> subscriptions = new ArrayList<String>();
-
-    try {
-      if (!stream.path("subscriptions").isMissingNode()) {
-         subscriptions = mapper.readValue(mapper.writeValueAsString(stream.get("subscriptions")),
-           new TypeReference<ArrayList<String>>() {});
-      }
-      subscriptions.add(subsId);
-
-      ((ObjectNode)stream).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subscriptions)));
-
-    } catch (JsonParseException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");
-    } catch (JsonMappingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error deserializing subscriptions array");
-    } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error Json processing exception");
-    } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    }
-
-  }
+//  /** Put the subscription id in the Service Object stream subscription array
+//   *
+//   * @param stream
+//   * @param subsId
+//   */
+//  public void setSubscription(JsonNode stream, String subsId) {
+//    ArrayList<String> subscriptions = new ArrayList<String>();
+//
+//    try {
+//      if (!stream.path("subscriptions").isMissingNode()) {
+//         subscriptions = mapper.readValue(mapper.writeValueAsString(stream.get("subscriptions")),
+//           new TypeReference<ArrayList<String>>() {});
+//      }
+//      subscriptions.add(subsId);
+//
+//      ((ObjectNode)stream).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subscriptions)));
+//
+//    } catch (JsonParseException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");
+//    } catch (JsonMappingException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error deserializing subscriptions array");
+//    } catch (JsonProcessingException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error Json processing exception");
+//    } catch (IOException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
+//    } catch (Exception e) {
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//    }
+//
+//  }
 
   /** Creating subscriptions for groups information
    *
