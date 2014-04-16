@@ -89,7 +89,7 @@ public class Group {
     CouchBase cb = new CouchBase();
     Data data = null;
 
-    String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId, soIds);
+    String groupLastUpdateDataID = SearchEngine.getGroupLastUpdateDocId(streamId, soIds);
     data = cb.getData(groupLastUpdateDataID);
 
     return data.getString();
