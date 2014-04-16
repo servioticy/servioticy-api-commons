@@ -34,7 +34,8 @@ public class SearchEngine {
         									 .put("cluster.name", "serviolastic").build();
 
         client = new TransportClient(settings)
-        	.addTransportAddress(new InetSocketTransportAddress("192.168.56.101", 9300));
+        	.addTransportAddress(new InetSocketTransportAddress("localhost", 9300));
+//        	.addTransportAddress(new InetSocketTransportAddress("192.168.56.101", 9300));
     }
 
     public static List<String> searchUpdates(String soId, String streamId, SearchCriteria filter) {
@@ -138,8 +139,8 @@ public class SearchEngine {
 
         return res;
     }
-    
-    
+
+
     public static List<String> getAllSubscriptionsByStream(String soId, String streamId) {
 
         SearchResponse scan = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
@@ -171,14 +172,14 @@ public class SearchEngine {
 
         return res;
     }
-    
+
     public static List<String> getAllSubscriptionsBySrcAndDst(String soId) {
 
         SearchResponse scan = client.prepareSearch("subscriptions").setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.boolQuery()
                 		  .should(QueryBuilders.matchQuery("doc.source", soId))
                 		  .should(QueryBuilders.matchQuery("doc.destination", soId))
-                		 )		
+                		 )
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
@@ -187,7 +188,7 @@ public class SearchEngine {
                 .setQuery(QueryBuilders.boolQuery()
                 		  .should(QueryBuilders.matchQuery("doc.source", soId))
                 		  .should(QueryBuilders.matchQuery("doc.destination", soId))
-                		 )	
+                		 )
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
 
@@ -209,5 +210,5 @@ public class SearchEngine {
 
         return res;
     }
-    
+
 }

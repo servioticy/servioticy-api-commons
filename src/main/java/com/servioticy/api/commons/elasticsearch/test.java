@@ -14,15 +14,17 @@ public class test {
     public static void main(String[] args) {
 
 
-        long lastUpdate;
-        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","location");
-        System.out.println(lastUpdate);
-        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fa1","location");
-        System.out.println(lastUpdate);
-        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","foo");
-        System.out.println(lastUpdate);
+//        long lastUpdate;
+//        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","location");
+//        System.out.println(lastUpdate);
+//        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fa1","location");
+//        System.out.println(lastUpdate);
+//        lastUpdate = SearchEngine.getLastUpdateTimeStamp("1396461657731411aa73c28444ecf9a8c803e62312fd1","foo");
+//        System.out.println(lastUpdate);
 
-        return;
+        List<String> ids = SearchEngine.getAllSubscriptionsBySrcAndDst("139763553711326c0c76a4f3e4d81810b3f50d03b81f7");
+        for (String id : ids)
+        	System.out.println(id);
 
         /*List<String> IDs = new ArrayList<String>();
         IDs.add("139594599486709ceb6bfdddb48cfabfcce0e6a9cf6c8");

@@ -113,7 +113,7 @@ public class CouchBase {
    * @return
    */
   public Subscription getSubscription(String subsId) {
-    String storedSubs = (String)cli_so.get(subsId);
+    String storedSubs = (String)cli_subscriptions.get(subsId);
     if (storedSubs != null) {
       return new Subscription(storedSubs);
     }
@@ -235,6 +235,9 @@ public class CouchBase {
       cli_so.delete(id);
   }
 
+  public void deleteSubscription(String id) {
+      cli_subscriptions.delete(id);
+  }
 
   /**
    * @param key
