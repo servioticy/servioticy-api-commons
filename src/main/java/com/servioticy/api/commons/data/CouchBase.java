@@ -58,10 +58,6 @@ public class CouchBase {
     return null;
   }
 
-
-
-
-
   /**
    * @param so
    */
@@ -177,7 +173,6 @@ public class CouchBase {
     }
   }
 
-
   /**
    * @param dataId
    * @return
@@ -196,9 +191,9 @@ public class CouchBase {
    * @param timestamp
    * @return
    */
-  public Data getData(String SoID, String streamId, long timestamp) {
-    String dataId = SoID+"-"+streamId+"-"+timestamp;
-    System.out.println("Searching for "+dataId);
+  public Data getData(String soId, String streamId, long timestamp) {
+    String dataId = soId + "-" + streamId + "-" + timestamp;
+    System.out.println("Searching for " + dataId); // TODO [David] system.out.println???
     String storedData = (String)cli_data.get(dataId);
     if (storedData != null) {
       return new Data(dataId,storedData);
@@ -206,8 +201,9 @@ public class CouchBase {
     return null;
   }
 
+  // TODO Deprecated??? [Juan Luis]
   /**
-   * @param userId
+   * @param userId    // TODO [David] params????
    * @param data_id
    * @return
    */
@@ -289,6 +285,4 @@ public class CouchBase {
   public String getOpId(String key) {
     return (String)cli_private.get(key);
   }
-
-
 }

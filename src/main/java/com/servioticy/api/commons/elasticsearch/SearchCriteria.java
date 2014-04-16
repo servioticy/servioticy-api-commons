@@ -19,8 +19,8 @@ public class SearchCriteria {
     private static ObjectMapper mapper = new ObjectMapper();
 
     // RANGES ***********************************
-    public boolean  timerange = false;
-    public boolean  numericrange = false;
+    public boolean  		timerange = false;
+    public boolean  		numericrange = false;
     // GENERIC
     public double           rangefrom = Double.MIN_VALUE;
     public double           rangeto = Double.MAX_VALUE;
@@ -28,11 +28,11 @@ public class SearchCriteria {
     public String           numericrangefield;
 
     // LIMIT ***********************************
-    public boolean  limit = false;
-    public int      limitcount;
+    public boolean  		limit = false;
+    public int      		limitcount;
 
     // GEODISTANCE *****************************
-    public boolean  geodistance = false;
+    public boolean  		geodistance = false;
 
     // GENERIC
     public double           pointlat;
@@ -44,7 +44,7 @@ public class SearchCriteria {
 
 
     // GEOSHAPE ********************************
-    public boolean  geoboundingbox = false;
+    public boolean  		geoboundingbox = false;
 
     // BOX
     public double           geoboxupperleftlat;
@@ -54,16 +54,14 @@ public class SearchCriteria {
 
 
     // MATCH ********************************
-    public boolean  match = false;
+    public boolean  		match = false;
     public String           matchfield;
     public String           matchstring;
 
 
     // Returns true if combination is possible
     public boolean valid() {
-
         return
-
                 (timerange || (numericrange && numericrangefield != null) ||
                 (timerange && numericrange && numericrangefield != null &&
                         !numericrangefield.contains("couchbaseDocument.doc.lastUpdate")) ||
@@ -72,7 +70,6 @@ public class SearchCriteria {
         ;
     }
 
-
     public String buildFilter() {
 
         StringBuilder filter = new StringBuilder();
@@ -80,24 +77,23 @@ public class SearchCriteria {
         if(!valid())
             return null;
 
-
         AndFilterBuilder global = FilterBuilders.andFilter();
 
         if(timerange) {
-
-            RangeFilterBuilder rangeFilter = FilterBuilders.rangeFilter("doc.lastUpdate")
-                                            .from(rangefrom).to(rangeto)
-                                            .includeLower(true).includeUpper(true);
+            RangeFilterBuilder rangeFilter =
+            		FilterBuilders.rangeFilter("doc.lastUpdate")
+                                  .from(rangefrom).to(rangeto)
+                                  .includeLower(true).includeUpper(true);
             //filter.append(rangeFilter.toString());
             global.add(rangeFilter);
         }
 
         if(numericrange) {
 
-            RangeFilterBuilder numericrangeFilter = FilterBuilders.rangeFilter("doc."+numericrangefield)
-                                            .from(rangefrom).includeLower(true)
-                                            .to(rangeto).includeUpper(true);
-
+            RangeFilterBuilder numericrangeFilter =
+            		FilterBuilders.rangeFilter("doc."+numericrangefield)
+                                  .from(rangefrom).includeLower(true)
+                                  .to(rangeto).includeUpper(true);
 
             //filter.append(numericrangeFilter());
             global.add(numericrangeFilter);
@@ -105,9 +101,10 @@ public class SearchCriteria {
 
         if(geodistance) {
 
-            GeoDistanceFilterBuilder geodistanceFilter = FilterBuilders.geoDistanceFilter("doc.channels.location.current-value")
-                                            .distance(geodistancevalue, DistanceUnit.fromString(geodistanceunit))
-                                            .point(pointlat,pointlon);
+            GeoDistanceFilterBuilder geodistanceFilter =
+            		FilterBuilders.geoDistanceFilter("doc.channels.location.current-value")
+            					  .distance(geodistancevalue, DistanceUnit.fromString(geodistanceunit))
+                                  .point(pointlat,pointlon);
 
             //filter.append(geodistanceFilter.toString());
             global.add(geodistanceFilter);
@@ -115,9 +112,10 @@ public class SearchCriteria {
 
         if(geoboundingbox) {
 
-            GeoBoundingBoxFilterBuilder geodbboxFilter = FilterBuilders.geoBoundingBoxFilter("doc.channels.location.current-value")
-                                            .topLeft(geoboxupperleftlat, geoboxupperleftlon)
-                                            .bottomRight(geoboxbottomrightlat, geoboxbottomrightlon);
+            GeoBoundingBoxFilterBuilder geodbboxFilter =
+            		FilterBuilders.geoBoundingBoxFilter("doc.channels.location.current-value")
+                                  .topLeft(geoboxupperleftlat, geoboxupperleftlon)
+                                  .bottomRight(geoboxbottomrightlat, geoboxbottomrightlon);
 
 
             //filter.append(geodbboxFilter());
@@ -127,8 +125,7 @@ public class SearchCriteria {
 
         if(match) {
 
-            TermFilterBuilder matchFilter = FilterBuilders.termFilter("doc."+matchfield, matchstring);
-
+            TermFilterBuilder matchFilter = FilterBuilders.termFilter("doc." + matchfield, matchstring);
 
             //filter.append(matchFilter.toString());
             global.add(matchFilter);
@@ -143,7 +140,7 @@ public class SearchCriteria {
     public static SearchCriteria buildFromJson(String searchCriteriaJson) {
 
         try {
-            System.out.println("Building from: --"+searchCriteriaJson+"--");
+            System.out.println("Building from: --" + searchCriteriaJson + "--");
             SearchCriteria res = mapper.readValue(searchCriteriaJson, SearchCriteria.class);
             return res;
 
@@ -160,8 +157,7 @@ public class SearchCriteria {
         StringBuilder res = new StringBuilder();
         for (Field field : this.getClass().getDeclaredFields()) {
             try {
-                res.append(field.getName()
-                         + ": " + field.get(this)+"\n");
+                res.append(field.getName() + ": " + field.get(this)+"\n");
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {

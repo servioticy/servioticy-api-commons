@@ -17,7 +17,6 @@ package com.servioticy.api.commons.data;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.ws.rs.core.Response;
 
@@ -89,28 +88,8 @@ public class Group {
   public String lastUpdate() {
     CouchBase cb = new CouchBase();
     Data data = null;
-    //ObjectNode lastUpdate = mapper.createObjectNode();
-    //ObjectNode nextLastUpdate = mapper.createObjectNode();
-    //SO so;
 
-    /*for (String soId : soIds) {
-      so = cb.getSO(soId);
-      if (so == null)
-        continue;
-      try {
-        data = cb.getData(so, streamId);
-      } catch (Exception e) {
-        continue;
-      }
-      if (data == null)
-        continue;
-      nextLastUpdate = (ObjectNode)data.lastUpdate();
-      if (lastUpdate.path("lastUpdate").asLong() < nextLastUpdate.get("lastUpdate").asLong()) {
-        lastUpdate = nextLastUpdate;
-      }
-    }*/
-
-    String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId,soIds);
+    String groupLastUpdateDataID = SearchEngine.getGropLastUpdateDocId(streamId, soIds);
     data = cb.getData(groupLastUpdateDataID);
 
     return data.getString();
