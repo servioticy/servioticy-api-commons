@@ -41,12 +41,14 @@ public class CouchBase {
   private static CouchbaseClient cli_so;
   private static CouchbaseClient cli_data;
   private static CouchbaseClient cli_subscriptions;
+  private static CouchbaseClient cli_actuations;
   private static CouchbaseClient cli_private;
 
   public CouchBase() {
     cli_so = Config.cli_so;
     cli_data = Config.cli_data;
     cli_subscriptions = Config.cli_subscriptions;
+    cli_actuations = Config.cli_actuations;
     cli_private = Config.cli_private;
   }
 
@@ -182,6 +184,47 @@ public class CouchBase {
     }
   }
 
+  /** Store new actuation
+  *
+  * @param actuation
+  */
+ public void setActuation(Actuation actuation) {
+   try {
+     OperationFuture<Boolean> setOp;
+     setOp = cli_actuations.set(actuation.getId(), 0, actuation.getStatus());
+     if (!setOp.get().booleanValue()) {
+       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+     }
+
+//     // TODO -> to maintain as Subscription (array) -> to improve
+//     // Update the SO stream with the data
+//     data.getSO().update();
+//     setOp = cli_so.set(data.getSO().getSOKey(), 0, data.getSO().getString());
+//     if (!setOp.get().booleanValue()) {
+//       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//     }
+   } catch (InterruptedException e) {
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+   } catch (ExecutionException e) {
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+   } catch (Exception e) {
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+   }
+ }  
+ 
+ /**
+  * @param dataId
+  * @return
+  */
+ public Actuation getActuation(String actuationId) {
+   String storedData = (String)cli_actuations.get(actuationId);
+   if (storedData != null) {
+     return Actuation.getFromJson(actuationId, storedData);
+   }
+   return null;
+ }
+ 
+ 
   /**
    * @param dataId
    * @return

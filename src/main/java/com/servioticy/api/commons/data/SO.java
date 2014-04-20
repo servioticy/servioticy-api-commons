@@ -348,6 +348,16 @@ public class SO {
     return soRoot.path("streams").get(streamId);
   }
 
+  /**
+   * @return the streamId JsonNode
+   */
+  public String getActuationsString() {
+    //TODO: could be null?
+	  return soRoot.path("actions").toString();
+  }
+
+  
+  
 //  /** Update the Service Object updatedAt field
 //   *
 //   */

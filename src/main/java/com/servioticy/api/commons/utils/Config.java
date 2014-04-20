@@ -38,6 +38,7 @@ public class Config implements ServletContextListener {
   public static CouchbaseClient cli_so;
   public static CouchbaseClient cli_data;
   public static CouchbaseClient cli_subscriptions;
+  public static CouchbaseClient cli_actuations;
   public static List<URI> public_uris = new LinkedList<URI>();
 
   public static CouchbaseClient cli_private;
