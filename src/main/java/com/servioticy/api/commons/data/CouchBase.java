@@ -180,7 +180,7 @@ public class CouchBase {
   *
   * @param actuation
   */
- public void setActuation(Actuation actuation) {
+ public static void setActuation(Actuation actuation) {
    try {
      OperationFuture<Boolean> setOp;
      setOp = cli_actuations.set(actuation.getId(), 0, actuation.getStatus());
@@ -208,7 +208,7 @@ public class CouchBase {
   * @param dataId
   * @return
   */
- public Actuation getActuation(String actuationId) {
+ public static Actuation getActuation(String actuationId) {
    String storedData = (String)cli_actuations.get(actuationId);
    if (storedData != null) {
      return Actuation.getFromJson(actuationId, storedData);
