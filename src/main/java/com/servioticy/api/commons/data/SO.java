@@ -238,12 +238,10 @@ public class SO {
     List<String> IDs = SearchEngine.getAllSubscriptionsByStream(soId, streamId);
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
-    CouchBase cb = new CouchBase();
-
     JsonNode root = mapper.createObjectNode();
     try {
     	for(String id : IDs)
-    		subsArray.add(mapper.readTree(cb.getSubscription(id).getString()));
+    		subsArray.add(mapper.readTree(CouchBase.getSubscription(id).getString()));
       ((ObjectNode)root).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subsArray)));
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");

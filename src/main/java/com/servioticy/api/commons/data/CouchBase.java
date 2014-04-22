@@ -16,7 +16,6 @@
 package com.servioticy.api.commons.data;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
@@ -38,23 +37,16 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
 public class CouchBase {
-  private static CouchbaseClient cli_so;
-  private static CouchbaseClient cli_data;
-  private static CouchbaseClient cli_subscriptions;
-  private static CouchbaseClient cli_private;
-
-  public CouchBase() {
-    cli_so = Config.cli_so;
-    cli_data = Config.cli_data;
-    cli_subscriptions = Config.cli_subscriptions;
-    cli_private = Config.cli_private;
-  }
+  private static CouchbaseClient cli_so = Config.cli_so;
+  private static CouchbaseClient cli_data = Config.cli_data;
+  private static CouchbaseClient cli_subscriptions = Config.cli_subscriptions;
+  private static CouchbaseClient cli_private = Config.cli_private;
 
   /**
    * @param soId
    * @return
    */
-  public SO getSO(String soId) {
+  public static SO getSO(String soId) {
     String storedSO = (String)cli_so.get(soId);
     if (storedSO != null) {
       return new SO(storedSO);
@@ -65,7 +57,7 @@ public class CouchBase {
   /**
    * @param so
    */
-  public void setSO(SO so) {
+  public static void setSO(SO so) {
     // TODO check to insert unique so_id
     try {
       // Asynchronous set
@@ -86,7 +78,7 @@ public class CouchBase {
    * @param userId
    * @return all the Service Objects as String
    */
-  public String getAllSOs(String userId) {
+  public static String getAllSOs(String userId) {
     ArrayList<String> sos = new ArrayList<String>();
 
     View view = cli_so.getView("user", "byUser");
@@ -114,7 +106,7 @@ public class CouchBase {
    * @param subsId
    * @return
    */
-  public Subscription getSubscription(String subsId) {
+  public static Subscription getSubscription(String subsId) {
     // Get the Subscriptions
     String subsKey = SearchEngine.getSusbcriptionDocId(subsId);
     if (subsKey == null)
@@ -131,7 +123,7 @@ public class CouchBase {
    *
    * @param subs
    */
-  public void setSubscription(Subscription subs) {
+  public static void setSubscription(Subscription subs) {
     try {
       OperationFuture<Boolean> setOp;
       setOp = cli_subscriptions.set(subs.getKey(), 0, subs.getString());
@@ -158,7 +150,7 @@ public class CouchBase {
    *
    * @param data
    */
-  public void setData(Data data) {
+  public static void setData(Data data) {
     try {
       OperationFuture<Boolean> setOp;
       setOp = cli_data.set(data.getKey(), 0, data.getString());
@@ -186,7 +178,7 @@ public class CouchBase {
    * @param dataId
    * @return
    */
-  public Data getData(String dataId) {
+  public static Data getData(String dataId) {
     String storedData = (String)cli_data.get(dataId);
     if (storedData != null) {
       return new Data(dataId,storedData);
@@ -200,7 +192,7 @@ public class CouchBase {
    * @param timestamp
    * @return
    */
-  public Data getData(String soId, String streamId, long timestamp) {
+  public static Data getData(String soId, String streamId, long timestamp) {
     String dataId = soId + "-" + streamId + "-" + timestamp;
     System.out.println("Searching for " + dataId); // TODO [David] system.out.println???
     String storedData = (String)cli_data.get(dataId);
@@ -216,7 +208,7 @@ public class CouchBase {
    * @param data_id
    * @return
    */
-  public Data getData(SO so, String streamId) {
+  public static Data getData(SO so, String streamId) {
 
     JsonNode stream = so.getStream(streamId);
     if (stream == null) return null;
@@ -233,16 +225,16 @@ public class CouchBase {
     return null;
   }
 
-  public void deleteData(String id) {
+  public static void deleteData(String id) {
       cli_data.delete(id);
   }
 
 
-  public void deleteSO(String id) {
+  public static void deleteSO(String id) {
       cli_so.delete(id);
   }
 
-  public void deleteSubscription(String subsKey) {
+  public static void deleteSubscription(String subsKey) {
 	try {
 	  // Asynchronous delete
 	  OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
@@ -262,7 +254,7 @@ public class CouchBase {
    * @param key
    * @return JsonNode that represents the stored document
    */
-  public JsonNode getJsonNode(String key) {
+  public static JsonNode getJsonNode(String key) {
     ObjectMapper mapper = new ObjectMapper();
 //    JsonNode json = mapper.createObjectNode();
     JsonNode json;
@@ -286,7 +278,7 @@ public class CouchBase {
    * @param key
    * @param exp -> expiration time
    */
-  public void setOpId(String key, int exp) {
+  public static void setOpId(String key, int exp) {
     // Do an asynchronous set
     OperationFuture<Boolean> setOp = cli_private.set(key, exp, "{}");
     // Check to see if our set succeeded
@@ -306,7 +298,7 @@ public class CouchBase {
    * @param key
    * @return the OpId as String
    */
-  public String getOpId(String key) {
+  public static String getOpId(String key) {
     return (String)cli_private.get(key);
   }
 }

@@ -58,6 +58,20 @@ public class SearchCriteria {
     public String           matchfield;
     public String           matchstring;
 
+    public static SearchCriteria buildFromJson(String searchCriteriaJson) {
+
+        try {
+            System.out.println("Building from: --" + searchCriteriaJson + "--");
+            SearchCriteria res = mapper.readValue(searchCriteriaJson, SearchCriteria.class);
+            return res;
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     // Returns true if combination is possible
     public boolean valid() {
@@ -136,21 +150,6 @@ public class SearchCriteria {
         return filter.toString();
     }
 
-
-    public static SearchCriteria buildFromJson(String searchCriteriaJson) {
-
-        try {
-            System.out.println("Building from: --" + searchCriteriaJson + "--");
-            SearchCriteria res = mapper.readValue(searchCriteriaJson, SearchCriteria.class);
-            return res;
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     public String toString() {
 

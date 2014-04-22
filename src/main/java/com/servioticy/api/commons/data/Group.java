@@ -86,11 +86,10 @@ public class Group {
    * @return The lastUpdate value of the streamId for all the soIds
    */
   public String lastUpdate() {
-    CouchBase cb = new CouchBase();
     Data data = null;
 
     String groupLastUpdateDataID = SearchEngine.getGroupLastUpdateDocId(streamId, soIds);
-    data = cb.getData(groupLastUpdateDataID);
+    data = CouchBase.getData(groupLastUpdateDataID);
 
     return data.getString();
   }
@@ -100,7 +99,6 @@ public class Group {
    * @param destination
    */
   public void createSubscriptions(String destination) {
-    CouchBase cb = new CouchBase();
     SO so;
     String body;
 
@@ -108,7 +106,7 @@ public class Group {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 
     for (String soId : soIds) {
-      so = cb.getSO(soId);
+      so = CouchBase.getSO(soId);
 
       body = "{ " + "\"callback\" : " + "\"internal\", \"destination\":  \"" + destination + "\", \"customFields\": { \"groupId\": \"" + groupId + "\" }" + " }";
 
@@ -116,7 +114,7 @@ public class Group {
       Subscription subs = new Subscription(so, streamId, body);
 
       // Store in Couchbase
-      cb.setSubscription(subs);
+      CouchBase.setSubscription(subs);
     }
 
   }
@@ -125,12 +123,11 @@ public class Group {
    *
    */
   public void checkSoIdsStream() {
-    CouchBase cb = new CouchBase();
     SO so;
     JsonNode stream;
 
     for (String soId : soIds) {
-      so = cb.getSO(soId);
+      so = CouchBase.getSO(soId);
       if (so == null)
         throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The Service Object: " + soId + " does not exist.");
 

@@ -38,13 +38,11 @@ public class Subscription {
    * @param storedSubs
    */
   public Subscription(String storedSubs, String subsKey) {
-    CouchBase cb = new CouchBase();
-
     try {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
       this.subsKey = subsKey;
-      this.soParent = cb.getSO(subsRoot.get("source").asText());
+      this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
