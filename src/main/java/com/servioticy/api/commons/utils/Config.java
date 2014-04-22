@@ -67,6 +67,7 @@ public class Config implements ServletContextListener {
           cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+          cli_actuations = new CouchbaseClient(private_uris, config.getProperty("actuations_bucket"), "");
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
         }
@@ -85,6 +86,7 @@ public class Config implements ServletContextListener {
       cli_data.shutdown();
       cli_subscriptions.shutdown();
       cli_private.shutdown();
+      cli_actuations.shutdown();
     }
 
     public String getProperty(String key) {

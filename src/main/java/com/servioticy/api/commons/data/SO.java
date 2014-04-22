@@ -35,11 +35,8 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class SO {
   protected static ObjectMapper mapper = new ObjectMapper();
-
   protected String soKey, userId, soId;
   protected JsonNode soRoot = mapper.createObjectNode();
-
-//  public SO() { }
 
   /** Create a SO with a database stored Service Object
    *
@@ -305,6 +302,19 @@ public class SO {
     return root.toString();
   }
 
+  /** Return the actions 
+  *
+  * @return The actions in the SO
+  */
+ public String responseActuations() {
+
+   JsonNode actions = soRoot.path("actions");
+   if (actions == null) return null;
+
+   return actions.toString();
+ }
+  
+  
   /**
    * @return Service Object as String
    */
@@ -356,7 +366,47 @@ public class SO {
 	  return soRoot.path("actions").toString();
   }
 
+  /**
+   * @param actuationName
+   * @return the actutation JsonNode
+   */
+  public JsonNode getActuation(String actuationName) {
+	  JsonNode actions = soRoot.path("actions");
+	  if(actions == null) {
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+				  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
+	  }
+	  for (int i = 0; i < actions.size(); i ++) {
+		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
+			return actions.get(i);
+	  }
+	  
+	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+			  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
+	
+  }
+
   
+  
+  /**
+   * @return true if the action exists in the SO
+   */
+
+  public boolean checkActuation(String actuationName) {
+	   
+	  JsonNode actions = soRoot.path("actions");
+	  if(actions == null) {
+		  //System.out.println("actions is null");
+		  return false;
+	  }
+	  for (int i = 0; i < actions.size(); i ++) {
+		//System.out.println(i+": "+actions.get(i).path("name").asText());
+		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
+			return true;
+	  }
+	  
+	  return false;
+  }
   
 //  /** Update the Service Object updatedAt field
 //   *

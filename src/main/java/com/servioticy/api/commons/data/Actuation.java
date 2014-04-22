@@ -1,6 +1,5 @@
 package com.servioticy.api.commons.data;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -14,8 +13,7 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 public class Actuation {
 	
 	private static ObjectMapper mapper = new ObjectMapper();
-	private SO soParent = null;
-	private JsonNode actRoot = null;
+	private JsonNode actRoot = mapper.createObjectNode();
 	private String id =  UUID.randomUUID().toString().replaceAll("-", "");
 	
 	public static Actuation getFromJson(String Id, String storedData) {
@@ -24,20 +22,31 @@ public class Actuation {
 		
 	}
 	
-	
-	public Actuation(SO so, String actuationName, String body) {
-		try {
-			soParent = so;
-		    JsonNode actionObject = mapper.readTree(body);
-		    actRoot = mapper.createObjectNode();
-		    ObjectNode action = ((ObjectNode)actRoot).putObject("action");
-		    ObjectNode currentStatus = ((ObjectNode)actRoot).putObject("currentStatus");
-		    action.putAll((ObjectNode)actionObject);		    
-		    currentStatus.put("status", "Submitted");
-		    currentStatus.put("updatedAt", System.currentTimeMillis());		    
-		} catch (Exception e) {
-		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);		      
-		}
+	public Actuation(SO so, String actuationName, String parametersString) {
+		
+			
+
+			ObjectNode description = ((ObjectNode)actRoot).putObject("description");
+			description.putAll((ObjectNode)so.getActuation(actuationName));
+			
+			ObjectNode currentStatus = ((ObjectNode)actRoot).putObject("currentStatus");		    		    
+			currentStatus.put("status", "Submitted");
+			currentStatus.put("updatedAt", System.currentTimeMillis());
+
+			if(parametersString != null && !parametersString.isEmpty()) {				
+				((ObjectNode)actRoot).put("parameters", parametersString);
+				//putObject("parameters",);
+				//ObjectNode parameters = ((ObjectNode)actRoot).putObject("parameters");
+//				try {
+//					parameters.putAll((ObjectNode)mapper.readTree(parametersString));
+//				} catch (Exception e) {
+//					throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+//							  "Actuation '"+actuationName+"' invoked with wrong formatted parameters: " + parametersString);
+//				}
+			} 
+
+			System.out.println("Actuation: "+actRoot.toString());
+		    
 	}
 	
 	public Actuation(String Id, String storedData) {		
@@ -52,9 +61,8 @@ public class Actuation {
 	
 	public void updateStatus(String newStatusIn) {
 		try { 
-			ObjectNode newStatus = (ObjectNode)mapper.readTree(newStatusIn);
 			ObjectNode currentStatus = ((ObjectNode)actRoot).putObject("currentStatus");
-			currentStatus.putAll(newStatus);
+			currentStatus.put("status",newStatusIn);
 			currentStatus.put("updatedAt", System.currentTimeMillis());
 		} catch (Exception e) {
 		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);		      
@@ -77,5 +85,13 @@ public class Actuation {
 		
 	public String getParameters() {
 		return null;
+	}
+	
+	public String toString() {
+		try {
+			return mapper.writeValueAsString(actRoot);
+		} catch (JsonProcessingException e) {
+			throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "Malformed actRoot in Actuation");
+		}
 	}
 }
