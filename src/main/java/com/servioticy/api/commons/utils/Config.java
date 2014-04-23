@@ -60,7 +60,7 @@ public class Config implements ServletContextListener {
           private_uris.add(URI.create(private_uri_array[i]));
         }
         try {
-          cpublic = new CouchbaseClient(public_uris, config.getProperty("public_bucket"), "");
+          cpublic = new CouchbaseClient(public_uris, config.getProperty("so_bucket"), "");
           cprivate = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
