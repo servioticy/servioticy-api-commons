@@ -86,9 +86,6 @@ public class Config implements ServletContextListener {
           // Buckets config
           soupdates = config.getProperty("updates_bucket");
           subscriptions = config.getProperty("subscriptions_bucket");
-
-
-
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
         }
