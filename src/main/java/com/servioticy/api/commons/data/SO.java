@@ -320,9 +320,10 @@ public class SO {
     try {
       Map<String, JsonNode> mstreams = mapper.readValue(streams.traverse(), new TypeReference<Map<String, JsonNode>>() {});
       ArrayList<JsonNode> astreams = new ArrayList<JsonNode>();
-      JsonNode s = mapper.createObjectNode();
+      JsonNode s;
 
       for (Map.Entry<String, JsonNode> stream : mstreams.entrySet()) {
+    	s = mapper.createObjectNode();
         ((ObjectNode)s).put("name", stream.getKey());
         ((ObjectNode)s).putAll((ObjectNode)stream.getValue());
         ((ObjectNode)s).remove("data");
