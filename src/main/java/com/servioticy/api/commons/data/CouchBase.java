@@ -112,7 +112,7 @@ public class CouchBase {
     // Get the Subscriptions
     String subsKey = SearchEngine.getSusbcriptionDocId(subsId);
     if (subsKey == null)
-    	return null;
+        return null;
 
     String storedSubs = (String)cli_subscriptions.get(subsKey);
     if (storedSubs != null) {
@@ -202,8 +202,8 @@ public class CouchBase {
    } catch (Exception e) {
      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
    }
- }  
- 
+ }
+
  /**
   * @param dataId
   * @return
@@ -215,8 +215,8 @@ public class CouchBase {
    }
    return null;
  }
- 
- 
+
+
   /**
    * @param dataId
    * @return
@@ -278,19 +278,19 @@ public class CouchBase {
   }
 
   public static void deleteSubscription(String subsKey) {
-	try {
-	  // Asynchronous delete
-	  OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
-	  if (!deleteOp.get().booleanValue()) {
-	    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	  }
-	} catch (InterruptedException e) {
-	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	} catch (ExecutionException e) {
-	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	} catch (Exception e) {
-	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-	}
+    try {
+      // Asynchronous delete
+      OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
+      if (!deleteOp.get().booleanValue()) {
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      }
+    } catch (InterruptedException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    } catch (ExecutionException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
   }
 
   /**
