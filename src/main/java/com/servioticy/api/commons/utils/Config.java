@@ -53,6 +53,10 @@ public class Config implements ServletContextListener {
   public static String soupdates;
   public static String subscriptions;
 
+  public static String idm_host;
+  public static String idm_user;
+  public static String idm_password;
+
     @Override
     public void contextInitialized(ServletContextEvent event) {
       try {
@@ -86,6 +90,12 @@ public class Config implements ServletContextListener {
           // Buckets config
           soupdates = config.getProperty("updates_bucket");
           subscriptions = config.getProperty("subscriptions_bucket");
+
+          // Security config
+          idm_host = config.getProperty("idm_host");
+          idm_user = config.getProperty("idm_user");
+          idm_password = config.getProperty("idm_password");
+
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
         }

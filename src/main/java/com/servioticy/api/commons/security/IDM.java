@@ -1,19 +1,24 @@
 package com.servioticy.api.commons.security;
 
-import java.io.StringWriter;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
+import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HTTP;
 
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.utils.Config;
 
 
 public class IDM {
@@ -22,84 +27,80 @@ public class IDM {
 //	Headers:
 //	Authorization: Bearer {auth_token}
 
-
-	
-	
 	private static  HttpClient httpClient = new DefaultHttpClient();
-	
-	public static String PostSO(String auth_token, 
-								String type, 
-								String soId, 
-								boolean data_provenance_collection,
-								long cost,
-								String url) {
-		
+
+	public static JsonNode PostSO(String auth_token,
+								  String soId,
+								  boolean requires_token,
+								  boolean data_provenance_collection,
+								  boolean payment,
+								  String url) {
+
 		HttpRequestBase httpMethod;
 		StringEntity input;
-		
-		String body;
-		
-//		Body: {
-//		“type”: “simple”  /* or “composite”*/
-//		"id": "139221276359507f4059f607a4a16b9583b4a169e4937",
-//		 "data_provenance_collection": true /*or false*/,
-//		 “cost”: 7890.2
-//		}
-		
+
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode root = mapper.createObjectNode();
+
+		// Build json payload
+		((ObjectNode)root).put("authorization", auth_token);
+		((ObjectNode)root).put("id", soId);
+		((ObjectNode)root).put("requires_token", requires_token);
+		((ObjectNode)root).put("data_provenance_collection", data_provenance_collection);
+		((ObjectNode)root).put("payment", payment);
+
 		try {
-			input = new StringEntity(body);
+			input = new StringEntity(root.toString());
 		} catch (Exception e) {
 			return null;
 		}
 		input.setContentType("application/json");
-		HttpPost httpPost = new HttpPost(url+"/IDM/SO");
+		HttpPost httpPost = new HttpPost(url + "/idm/serviceobject/");
 		httpPost.setEntity(input);
-		httpMethod = httpPost;	
-		
-//		if(headers != null){
-//			for(Map.Entry<String, String> header : headers.entrySet()){
-//				httpMethod.addHeader(header.getKey(), header.getValue());
-//			}
-//		}
-		
-		
+		httpPost.setHeader(HTTP.CONTENT_TYPE, "application/json;charset=UTF-8");
+
+		// Basic authorization -> TODO to improve
+		String plainCreds = Config.idm_user + ":" + Config.idm_password;
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        String base64Creds = DatatypeConverter.printBase64Binary(plainCredsBytes);
+		httpPost.setHeader("Authorization", "Basic " + base64Creds);
+
+		httpMethod = httpPost;
+
 		HttpResponse response;
 		try {
 			response = httpClient.execute(httpMethod);
 		} catch (Exception e) {
 			return null;
 		}
-		
-		
+
 		int statusCode = response.getStatusLine().getStatusCode();
-		
-//
-//			“API_TOKEN”:”asdfasdfasdfasdfsadf”
-//
-//			“security_metadata:  {
-//
-//				"attributes" : {
-//
-//				"API_TOKEN": "ñaksjfñakjdsf",
-//
-//				"userid": "8898998aaaa7999aabbbbb1117",
-//
-//				.........
-//
-//			},
-//
-//			"policy": {
-//
-//				PLACEHOLDER FOR THE POLICY DESCRIPTOR
-//
-//			}
-//
-//			}
-//
-//		}
-		
+		BufferedReader rd;
+		StringBuffer result = new StringBuffer();
+		try {
+			rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+			String line = "";
+			while ((line = rd.readLine()) != null) {
+				result.append(line);
+			}
+
+			root = mapper.readTree(result.toString());
+		} catch (Exception e) {
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+		}
+
+		if (statusCode == 409)
+			throw new ServIoTWebApplicationException(Response.Status.CONFLICT, root.get("error").asText());
+		if (statusCode == 401)
+			throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, root.get("error").asText());
+//			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+		if (statusCode == 403)
+			throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, root.get("error").asText());
+		if (statusCode == 201)
+			return root;
+
 		return null;
 	}
-	
-	
+
+
 }

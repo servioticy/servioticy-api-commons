@@ -95,6 +95,10 @@ public class SO {
     }
   }
 
+  public void appendSecurity(JsonNode root) {
+    ((ObjectNode)soRoot).put("security", root);
+  }
+
   /** Update the Service Object
    *
    */
@@ -104,9 +108,7 @@ public class SO {
 	try {
 	  root = mapper.readTree(body);
       if (!root.path("customFields").isMissingNode()) {
-        // TODO improve check jsonNode parsing
         ((ObjectNode)soRoot).put("customFields", root.get("customFields"));
-//        ((ObjectNode)soRoot).put("customFields", mapper.readTree(mapper.writeValueAsString(root.get("customFields"))));
       }
 	} catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
@@ -182,6 +184,7 @@ public class SO {
 
     try {
       ((ObjectNode)root).put("id", soId);
+      ((ObjectNode)root).put("api_token", soRoot.path("security").get("api_token").asText());
       ((ObjectNode)root).put("createdAt", soRoot.get("createdAt").asLong());
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
@@ -301,7 +304,7 @@ public class SO {
     return root.toString();
   }
 
-  /** Return the actions 
+  /** Return the actions
   *
   * @return The actions in the SO
   */
@@ -312,8 +315,8 @@ public class SO {
 
    return actions.toString();
  }
-  
-  
+
+
   /**
    * @return Service Object as String
    */
@@ -379,20 +382,20 @@ public class SO {
 		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
 			return actions.get(i);
 	  }
-	  
+
 	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
 			  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
-	
+
   }
 
-  
-  
+
+
   /**
    * @return true if the action exists in the SO
    */
 
   public boolean checkActuation(String actuationName) {
-	   
+
 	  JsonNode actions = soRoot.path("actions");
 	  if(actions == null) {
 		  //System.out.println("actions is null");
@@ -403,10 +406,10 @@ public class SO {
 		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
 			return true;
 	  }
-	  
+
 	  return false;
   }
-  
+
 //  /** Update the Service Object updatedAt field
 //   *
 //   */
