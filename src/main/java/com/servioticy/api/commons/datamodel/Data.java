@@ -128,7 +128,10 @@ public class Data {
    * @return Data as String
    */
   public String getString() {
-    return dataRoot.toString();
+	  if(dataRoot!=null)
+		  return dataRoot.toString();
+	  else
+		  return "";
   }
 
   /**
