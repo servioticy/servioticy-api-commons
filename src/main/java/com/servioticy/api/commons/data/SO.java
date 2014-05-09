@@ -223,7 +223,7 @@ public class SO {
    * @param streamId
    * @return subscriptions in output format
    */
-  public String responseSubscriptions(String streamId) {
+  public String responseSubscriptions(String streamId, boolean externalOnly) {
 
     JsonNode stream = getStream(streamId);
 
@@ -232,7 +232,10 @@ public class SO {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
 
     // Get the Subscriptions
-    List<String> IDs = SearchEngine.getAllSubscriptionsByStream(soId, streamId);
+    List<String> IDs = externalOnly ? 
+    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) : 
+    				   SearchEngine.getAllSubscriptionsByStream(soId, streamId);
+    				   
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     JsonNode root = mapper.createObjectNode();
