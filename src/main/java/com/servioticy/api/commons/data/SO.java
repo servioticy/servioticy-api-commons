@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.mapper.StreamsMapper;
 
 public class SO {
   protected static ObjectMapper mapper = new ObjectMapper();
@@ -71,28 +72,34 @@ public class SO {
 
     try {
       root = mapper.readTree(body);
+
+      ((ObjectNode)soRoot).put("id", soId);
+      ((ObjectNode)soRoot).put("userId", userId);
+      if (root.path("public").isMissingNode()) {
+    	  ((ObjectNode)soRoot).put("public", "false");
+      } else {
+    	  ((ObjectNode)soRoot).put("public", root.get("public").asText());
+      }
+      long time = System.currentTimeMillis();
+      ((ObjectNode)soRoot).put("createdAt", time);
+      ((ObjectNode)soRoot).put("updatedAt", time);
+      ((ObjectNode)soRoot).putAll((ObjectNode)root);
+
+      // Parsing streams
+      if (!root.path("streams").isMissingNode()) {
+    	  ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
+      }
+
+      // If is a CSO with groups field create the derivate subscriptions
+      if (!root.path("groups").isMissingNode()) {
+    	  createGroupsSubscriptions(root.get("groups"));
+      }
     } catch (JsonProcessingException e) {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
 
-    ((ObjectNode)soRoot).put("id", soId);
-    ((ObjectNode)soRoot).put("userId", userId);
-    if (root.path("public").isMissingNode()) {
-      ((ObjectNode)soRoot).put("public", "false");
-    } else {
-      ((ObjectNode)soRoot).put("public", root.get("public").asText());
-    }
-    long time = System.currentTimeMillis();
-    ((ObjectNode)soRoot).put("createdAt", time);
-    ((ObjectNode)soRoot).put("updatedAt", time);
-    ((ObjectNode)soRoot).putAll((ObjectNode)root);
-
-    // If is a CSO with groups field create the derivate subscriptions
-    if (!root.path("groups").isMissingNode()) {
-      createGroupsSubscriptions(root.get("groups"));
-    }
   }
 
   /** Update the Service Object
@@ -304,7 +311,7 @@ public class SO {
     return root.toString();
   }
 
-  /** Return the actions 
+  /** Return the actions
   *
   * @return The actions in the SO
   */
@@ -315,8 +322,8 @@ public class SO {
 
    return actions.toString();
  }
-  
-  
+
+
   /**
    * @return Service Object as String
    */
@@ -382,20 +389,20 @@ public class SO {
 		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
 			return actions.get(i);
 	  }
-	  
+
 	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
 			  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
-	
+
   }
 
-  
-  
+
+
   /**
    * @return true if the action exists in the SO
    */
 
   public boolean checkActuation(String actuationName) {
-	   
+
 	  JsonNode actions = soRoot.path("actions");
 	  if(actions == null) {
 		  //System.out.println("actions is null");
@@ -406,10 +413,10 @@ public class SO {
 		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
 			return true;
 	  }
-	  
+
 	  return false;
   }
-  
+
 //  /** Update the Service Object updatedAt field
 //   *
 //   */

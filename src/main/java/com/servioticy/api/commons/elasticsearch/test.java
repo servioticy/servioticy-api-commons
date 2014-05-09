@@ -1,10 +1,10 @@
 package com.servioticy.api.commons.elasticsearch;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.List;
 
-import com.servioticy.api.commons.data.CouchBase;
-import com.servioticy.api.commons.datamodel.Data;
+//import com.servioticy.api.commons.data.CouchBase;
+//import com.servioticy.api.commons.datamodel.Data;
 
 public class test {
 
