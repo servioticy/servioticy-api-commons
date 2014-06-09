@@ -28,6 +28,8 @@ import javax.servlet.ServletContextListener;
 import javax.ws.rs.core.Response;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 
 import com.couchbase.client.CouchbaseClient;
@@ -79,8 +81,18 @@ public class Config implements ServletContextListener {
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
 
+
+          String elasticSearchServers = config.getProperty("search_servers");
+          String elasticSearchPorts = config.getProperty("search_ports");
+          
           // ElasticSearch client
-          Node node = nodeBuilder().clusterName(config.getProperty("elastic_cluster")).client(true).node();
+          Settings settings = ImmutableSettings.settingsBuilder()
+			.put("http.enabled", "false")
+			.put("transport.tcp.port", elasticSearchPorts)
+			.put("discovery.zen.ping.multicast.enabled", "false")
+			.put("discovery.zen.ping.unicast.hosts", elasticSearchServers).build();
+
+          Node node = nodeBuilder().clusterName(config.getProperty("elastic_cluster")).client(true).settings(settings).node();
           elastic_client = node.client();
 
           // Buckets config
