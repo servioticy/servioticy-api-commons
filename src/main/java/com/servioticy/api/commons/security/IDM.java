@@ -43,7 +43,7 @@ public class IDM {
 		JsonNode root = mapper.createObjectNode();
 
 		// Build json payload
-		((ObjectNode)root).put("authorization", auth_token);
+		((ObjectNode)root).put("authorization", "Bearer " + auth_token);
 		((ObjectNode)root).put("id", soId);
 		((ObjectNode)root).put("requires_token", requires_token);
 		((ObjectNode)root).put("data_provenance_collection", data_provenance_collection);
@@ -60,6 +60,7 @@ public class IDM {
 		httpPost.setHeader(HTTP.CONTENT_TYPE, "application/json;charset=UTF-8");
 
 		// Basic authorization -> TODO to improve
+		// TODO to change talking with Juan David -> London hackathon
 		String plainCreds = Config.idm_user + ":" + Config.idm_password;
         byte[] plainCredsBytes = plainCreds.getBytes();
         String base64Creds = DatatypeConverter.printBase64Binary(plainCredsBytes);
