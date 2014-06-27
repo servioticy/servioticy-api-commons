@@ -54,6 +54,7 @@ public class Config implements ServletContextListener {
   public static String subscriptions;
 
   public static String idm_host;
+  public static int idm_port;
   public static String idm_user;
   public static String idm_password;
 
@@ -93,6 +94,7 @@ public class Config implements ServletContextListener {
 
           // Security config
           idm_host = config.getProperty("idm_host");
+          idm_port = Integer.parseInt(config.getProperty("idm_port"));
           idm_user = config.getProperty("idm_user");
           idm_password = config.getProperty("idm_password");
 
