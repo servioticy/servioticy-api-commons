@@ -48,17 +48,17 @@ public class SearchEngine {
     public static List<String> searchUpdates(String soId, String streamId, SearchCriteria filter) {
 
         SearchResponse scan  = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-        		.setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
+        		.setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         System.out.println("QUERY: "+client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
                 .setPostFilter(filter.buildFilter()).toString());
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
                 .setSize((int)scan.getHits().getTotalHits())
                 .setPostFilter(filter.buildFilter())
                 .execute().actionGet();
@@ -90,7 +90,7 @@ public class SearchEngine {
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
                 .setFrom(0).setSize(1)
-                .setQuery(QueryBuilders.regexpQuery("meta.id",".*-" + streamId + "-.*"))
+                .setQuery(QueryBuilders.regexpQuery("meta.id",".*-" + streamId.toLowerCase() + "-.*"))
                 .setPostFilter(IdsFilter)
                 .addSort("doc.lastUpdate", SortOrder.DESC)
                 .execute().actionGet();
@@ -106,7 +106,7 @@ public class SearchEngine {
         //https://github.com/elasticsearch/elasticsearch/blob/master/src/test/java/org/elasticsearch/search/aggregations/metrics/MaxTests.java
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .addAggregation(max("max").field("lastUpdate"))
                 .execute().actionGet();
 
@@ -118,13 +118,13 @@ public class SearchEngine {
     public static List<String> getAllUpdatesId(String soId, String streamId) {
 
         SearchResponse scan = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
 
@@ -150,14 +150,14 @@ public class SearchEngine {
     public static List<String> getExternalSubscriptionsByStream(String soId, String streamId) {
 
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setSearchType(SearchType.SCAN)
                 .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
@@ -184,13 +184,13 @@ public class SearchEngine {
     public static List<String> getAllSubscriptionsByStream(String soId, String streamId) {
 
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId.toLowerCase() + "-"))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
 
