@@ -81,10 +81,9 @@ public class Config implements ServletContextListener {
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
 
-
           String elasticSearchServers = config.getProperty("search_servers");
           String elasticSearchPorts = config.getProperty("search_ports");
-          
+
           // ElasticSearch client
           Settings settings = ImmutableSettings.settingsBuilder()
 			.put("http.enabled", "false")
