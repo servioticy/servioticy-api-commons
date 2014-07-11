@@ -15,6 +15,8 @@
  ******************************************************************************/
 package com.servioticy.api.commons.utils;
 
+import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
@@ -24,6 +26,11 @@ import java.util.Properties;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.ws.rs.core.Response;
+
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.node.Node;
 
 import com.couchbase.client.CouchbaseClient;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
@@ -35,11 +42,18 @@ public class Config implements ServletContextListener {
 
   public static Properties config = new Properties();
 
-  public static CouchbaseClient cpublic;
+  public static CouchbaseClient cli_so;
+  public static CouchbaseClient cli_data;
+  public static CouchbaseClient cli_subscriptions;
+  public static CouchbaseClient cli_actuations;
   public static List<URI> public_uris = new LinkedList<URI>();
 
-  public static CouchbaseClient cprivate;
+  public static CouchbaseClient cli_private;
   public static List<URI> private_uris = new LinkedList<URI>();
+
+  public static Client elastic_client;
+  public static String soupdates;
+  public static String subscriptions;
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
@@ -60,8 +74,29 @@ public class Config implements ServletContextListener {
           private_uris.add(URI.create(private_uri_array[i]));
         }
         try {
-          cpublic = new CouchbaseClient(public_uris, config.getProperty("so_bucket"), "");
-          cprivate = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+          // Couchbase clients
+          cli_so = new CouchbaseClient(public_uris, config.getProperty("so_bucket"), "");
+          cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
+          cli_actuations = new CouchbaseClient(public_uris, config.getProperty("actuations_bucket"), "");
+          cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
+          cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+
+          String elasticSearchServers = config.getProperty("search_servers");
+          String elasticSearchPorts = config.getProperty("search_ports");
+
+          // ElasticSearch client
+          Settings settings = ImmutableSettings.settingsBuilder()
+			.put("http.enabled", "false")
+			.put("transport.tcp.port", elasticSearchPorts)
+			.put("discovery.zen.ping.multicast.enabled", "false")
+			.put("discovery.zen.ping.unicast.hosts", elasticSearchServers).build();
+
+          Node node = nodeBuilder().clusterName(config.getProperty("elastic_cluster")).client(true).settings(settings).node();
+          elastic_client = node.client();
+
+          // Buckets config
+          soupdates = config.getProperty("updates_bucket");
+          subscriptions = config.getProperty("subscriptions_bucket");
         } catch (Exception e) {
           throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
         }
@@ -76,8 +111,15 @@ public class Config implements ServletContextListener {
       System.out.println("[SERVIOTICY-API] Closing Couchbase connection");
 
       // Disconnect to Couchbase
-      cpublic.shutdown();
-      cprivate.shutdown();
+      cli_so.shutdown();
+      cli_data.shutdown();
+      cli_subscriptions.shutdown();
+      cli_private.shutdown();
+      cli_actuations.shutdown();
+
+      // Disconnect to ElasticSearch
+      elastic_client.close();
+
     }
 
     public String getProperty(String key) {

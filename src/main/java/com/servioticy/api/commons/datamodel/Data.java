@@ -16,28 +16,30 @@
 package com.servioticy.api.commons.datamodel;
 
 import java.io.IOException;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.List;
 
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.index.mapper.MapperParsingException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.servioticy.api.commons.data.CouchBase;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.mapper.ChannelsMapper;
+import com.servioticy.api.commons.utils.GeoPointFieldMapper;
+
+import static com.servioticy.api.commons.exceptions.ExceptionHelper.detailedMessage;
 
 public class Data {
   protected static ObjectMapper mapper = new ObjectMapper();
 
-  private String dataKey, dataId;
+  private String dataKey;
   private SO soParent;
   private JsonNode dataRoot = mapper.createObjectNode();
+
 
   /** Create a Data with a database stored Data
    *
@@ -48,7 +50,6 @@ public class Data {
   public Data(String dataId, String stored_data) {
     try {
       dataRoot = mapper.readTree(stored_data);
-      this.dataId = dataId;
       this.dataKey = dataId;
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
@@ -64,94 +65,66 @@ public class Data {
    * @param body
    */
   public Data(SO so, String streamId, String body) {
-    CouchBase cb = new CouchBase();
+	  soParent = so;
+	  JsonNode stream = soParent.getStream(streamId);
 
-    soParent = so;
-    JsonNode stream = soParent.getStream(streamId);
+	  // Check if exists this streamId in the Service Object
+	  if (stream == null)
+		  throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
 
-    // Check if exists this streamId in the Service Object
-    if (stream == null)
-      throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "This Service Object does not have this stream.");
+	  JsonNode root;
+	  try {
+		  root = mapper.readTree(body);
 
-    JsonNode root;
-    try {
-      root = mapper.readTree(body);
-      // Check if exists lastUpdate
-      if (root.path("lastUpdate").isMissingNode())
-        throw new ServIoTWebApplicationException(Response.Status.NOT_FOUND, "The lastUpdate field was not found");
-      ((ObjectNode)dataRoot).put(root.get("lastUpdate").asText(), root);
-    } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
-    } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
-    }
+		  // Check if exists lastUpdate
+		  if (root.path("lastUpdate").isMissingNode()) {
+			  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The lastUpdate field was not found");
+		  } else {
+			  if (!root.path("lastUpdate").isLong() && !root.path("lastUpdate").isInt()) {
+				  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The lastUpdate has to be a long type");
+			  }
+		  }
 
-    // If Not exists generate the dataId and put in the SO stream data field
-    // else loaded
-    if (stream.path("data").isMissingNode()) {
-      // servioticy key = dataId
-      // TODO improve key and dataId generation
-      UUID uuid = UUID.randomUUID(); //UUID java library
-      dataId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-      dataKey= dataId;
-      soParent.setData(stream, dataId);
-    }
-    else {
-      dataId = stream.get("data").asText();
-      dataKey= dataId;
+		  // Check channels
+		  if (root.path("channels").isMissingNode()) {
+			  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No channels");
+		  } else {
+			  ChannelsMapper.parsePutData(root.get("channels"));
+		  }
 
-      JsonNode data = cb.getJsonNode(dataKey);
-      if (data == null)
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	  } catch (JsonProcessingException e) {
+		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+	  } catch (IOException e) {
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
+	  }
 
-      ((ObjectNode)data).putAll((ObjectNode)dataRoot);
-      dataRoot = data;
-    }
+	  // Parse location field
+	  try {
+		  if (!root.path("channels").path("location").path("current-value").isMissingNode()) {
+			  // Check is geojson
+			  GeoPointFieldMapper.parse(root.get("channels").get("location").get("current-value"));
+		  }
+	  } catch (IOException e) {
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
+	  } catch (MapperParsingException e) {
+		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, detailedMessage(e));
+	  } catch (Exception e) {
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	  }
+
+	  ((ObjectNode)dataRoot).putAll((ObjectNode)root);
+
+	  dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
+
   }
 
-//  public void appendData(String data) {
-//    JsonNode root;
-//
-//    try {
-//      root = mapper.readTree(data);
-//    } catch (JsonProcessingException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
-//    } catch (IOException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
-//    }
-//
-//    ((ObjectNode)data_root).put(root.get("lastUpdate").asText(), root.asText());
-//
-//  }
-
-  /**
-   * @return the last JsonNode of Data
-   */
-  public JsonNode lastUpdate() {
-    JsonNode lastUpdate = null;
-
-    try {
-//      Map<String, JsonNode> values = mapper.readValue(data_root.traverse(), new TypeReference<Map<String, JsonNode>>() {});
-//      List<JsonNode> list = new ArrayList<JsonNode>(values.values());
-//      lastUpdate = list.get(values.size() - 1).toString();
-
-      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      Entry<String, JsonNode> lastEntry = updates.lastEntry();
-      lastUpdate = lastEntry.getValue();
-
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    }
-
-    return lastUpdate;
-  }
 
   /** Generate response to last update of all data
    *
    * @return String
    */
   public String responseLastUpdate() {
-    String response = "{ \"data\": [ " + lastUpdate().toString() + " ] }";
+    String response = "{ \"data\": [ " + dataRoot.toString() + " ] }";
     return response;
   }
 
@@ -159,20 +132,23 @@ public class Data {
    *
    * @return String
    */
-  public String responseAllData() {
-    String values = null;
-    String response = null;
-    try {
-      // TODO evaluate performance
-//      NavigableMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      TreeMap<String, JsonNode> updates = mapper.readValue(dataRoot.traverse(), new TypeReference<TreeMap<String, JsonNode>>() {});
-      values = updates.values().toString();
-      response = "{ \"data\": " + values + " }";
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+  public static String responseAllData(List<Data> updates) {
+    StringBuilder res = new StringBuilder();
+    res.append("{ \"data\": [");
+
+    boolean first = true;
+    for(Data update : updates) {
+        if(first)
+            first=false;
+        else
+            res.append(",");
+
+        res.append(update.getString());
     }
 
-    return response;
+    res.append("]}");
+
+    return res.toString();
   }
 
   /**
@@ -186,21 +162,19 @@ public class Data {
    * @return Data as String
    */
   public String getString() {
-    return dataRoot.toString();
+	  if(dataRoot!=null)
+		  return dataRoot.toString();
+	  else
+		  return "";
   }
 
   /**
    * @return The Service Object data owner
    */
-  public SO getSO() {
+ /* public SO getSO() {
     return soParent;
-  }
+  }*/
 
-  /**
-   * @return Data id
-   */
-  public String getId() {
-    return dataId;
-  }
+
 
 }

@@ -37,14 +37,12 @@ public class Subscription {
    *
    * @param storedSubs
    */
-  public Subscription(String storedSubs) {
-    CouchBase cb = new CouchBase();
-
+  public Subscription(String storedSubs, String subsKey) {
     try {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
-      this.subsKey = subsId;
-      this.soParent = cb.getSO(subsRoot.get("source").asText());
+      this.subsKey = subsKey;
+      this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
@@ -88,8 +86,8 @@ public class Subscription {
     // TODO improve key and subsId generation
     UUID uuid = UUID.randomUUID(); //UUID java library
 
-    subsId= String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
-    subsKey= subsId;
+    subsId= uuid.toString().replaceAll("-", "");
+    subsKey= soParent.getId() + "-" + streamId + "-" + subsId;
 
     ((ObjectNode)subsRoot).put("id", subsId);
     long time = System.currentTimeMillis();
@@ -107,8 +105,8 @@ public class Subscription {
       ((ObjectNode)subsRoot).put("expire", root.get("expire").asInt());
     }
 
-    // Put the subscription id in the so stream subscription array
-    soParent.setSubscription(stream, subsId);
+//    // Put the subscription id in the so stream subscription array
+//    soParent.setSubscription(stream, subsId);
 
   }
 

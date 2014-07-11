@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.datamodel.Data;
+import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Group {
@@ -84,30 +85,17 @@ public class Group {
   /**
    * @return The lastUpdate value of the streamId for all the soIds
    */
-  public JsonNode lastUpdate() {
-    CouchBase cb = new CouchBase();
+  public String lastUpdate() {
     Data data = null;
-    ObjectNode lastUpdate = mapper.createObjectNode();
-    ObjectNode nextLastUpdate = mapper.createObjectNode();
-    SO so;
 
-    for (String soId : soIds) {
-      so = cb.getSO(soId);
-      if (so == null)
-        continue;
-      try {
-        data = cb.getData(so, streamId);
-      } catch (Exception e) {
-        continue;
-      }
-      if (data == null)
-        continue;
-      nextLastUpdate = (ObjectNode)data.lastUpdate();
-      if (lastUpdate.path("lastUpdate").asLong() < nextLastUpdate.get("lastUpdate").asLong()) {
-        lastUpdate = nextLastUpdate;
-      }
+    String groupLastUpdateDataID = SearchEngine.getGroupLastUpdateDocId(streamId, soIds);
+    if (groupLastUpdateDataID == null) {
+    	return "{}";
     }
-    return lastUpdate;
+
+    data = CouchBase.getData(groupLastUpdateDataID);
+
+    return data.getString();
   }
 
   /** Create subscriptions to destination for all the soIds
@@ -115,7 +103,6 @@ public class Group {
    * @param destination
    */
   public void createSubscriptions(String destination) {
-    CouchBase cb = new CouchBase();
     SO so;
     String body;
 
@@ -123,7 +110,7 @@ public class Group {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 
     for (String soId : soIds) {
-      so = cb.getSO(soId);
+      so = CouchBase.getSO(soId);
 
       body = "{ " + "\"callback\" : " + "\"internal\", \"destination\":  \"" + destination + "\", \"customFields\": { \"groupId\": \"" + groupId + "\" }" + " }";
 
@@ -131,7 +118,7 @@ public class Group {
       Subscription subs = new Subscription(so, streamId, body);
 
       // Store in Couchbase
-      cb.setSubscription(subs);
+      CouchBase.setSubscription(subs);
     }
 
   }
@@ -140,12 +127,11 @@ public class Group {
    *
    */
   public void checkSoIdsStream() {
-    CouchBase cb = new CouchBase();
     SO so;
     JsonNode stream;
 
     for (String soId : soIds) {
-      so = cb.getSO(soId);
+      so = CouchBase.getSO(soId);
       if (so == null)
         throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The Service Object: " + soId + " does not exist.");
 
