@@ -17,6 +17,8 @@ package com.servioticy.api.commons.data;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,10 +36,13 @@ import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.StreamsMapper;
 
+
 public class SO {
   protected static ObjectMapper mapper = new ObjectMapper();
   protected String soKey, userId, soId;
   protected JsonNode soRoot = mapper.createObjectNode();
+
+  private static final String[] Types = new String[] {"string", "number", "boolean", "geo_point" };
 
   /** Create a SO with a database stored Service Object
    *
@@ -85,6 +90,9 @@ public class SO {
       ((ObjectNode)soRoot).put("updatedAt", time);
       ((ObjectNode)soRoot).putAll((ObjectNode)root);
 
+      // Before parsing stream check and type enforcement
+      streamsChecking(root.get("streams"));
+
       // Parsing streams
       if (!root.path("streams").isMissingNode()) {
     	  ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
@@ -95,10 +103,62 @@ public class SO {
     	  createGroupsSubscriptions(root.get("groups"));
       }
     } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
+    		  "JsonProcessingException - " + e.getMessage());
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
+  }
+
+  public void streamsChecking(JsonNode streams) throws JsonParseException, IOException {
+	if (streams == null)
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object without Streams");
+
+
+    try {
+      Map<String, JsonNode> mstreams = mapper.readValue(streams.traverse(), new TypeReference<Map<String, JsonNode>>() {});
+
+      for (Map.Entry<String, JsonNode> stream : mstreams.entrySet()) {
+    	  channelsChecking(stream.getKey(), stream.getValue());
+      }
+    } catch (JsonMappingException e) {
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object with incorrect Streams value");
+    }
+  }
+
+  public void channelsChecking(String stream, JsonNode channels) throws JsonParseException, IOException {
+	if (channels == null)
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Stream " + stream + " without Channels");
+	if (channels.path("channels").isMissingNode())
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Stream " + stream + " without Channels");
+
+	channels = channels.get("channels");
+
+    try {
+      Map<String, JsonNode> mchannels = mapper.readValue(channels.traverse(), new TypeReference<Map<String, JsonNode>>() {});
+
+      for (Map.Entry<String, JsonNode> channel : mchannels.entrySet()) {
+        channelChecking(channel.getKey(), channel.getValue());
+      }
+    } catch (JsonMappingException e) {
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
+				"Stream " + stream + " with incorrect channels value");
+    }
+  }
+
+  public void channelChecking(String channel, JsonNode root) {
+	  if (root == null)
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Channel " + channel + " without info");
+
+      if (root.path("type").isMissingNode()) {
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Channel " + channel + " without type info");
+      } else {
+    	if (Arrays.asList(Types).contains(root.get("type").asText()) == false) {
+    	  System.out.println(root.get("type"));
+    	  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
+    			  "Channel " + channel + " with incorrect type");
+    	}
+      }
 
   }
 
@@ -239,10 +299,10 @@ public class SO {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
 
     // Get the Subscriptions
-    List<String> IDs = externalOnly ? 
-    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) : 
+    List<String> IDs = externalOnly ?
+    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) :
     				   SearchEngine.getAllSubscriptionsByStream(soId, streamId);
-    				   
+
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     JsonNode root = mapper.createObjectNode();
