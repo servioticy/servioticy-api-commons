@@ -20,8 +20,6 @@ import java.util.List;
 
 import javax.ws.rs.core.Response;
 
-import org.elasticsearch.index.mapper.MapperParsingException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,9 +27,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.ChannelsMapper;
-import com.servioticy.api.commons.utils.GeoPointFieldMapper;
-
-import static com.servioticy.api.commons.exceptions.ExceptionHelper.detailedMessage;
 
 public class Data {
   protected static ObjectMapper mapper = new ObjectMapper();
@@ -89,27 +84,13 @@ public class Data {
 		  if (root.path("channels").isMissingNode()) {
 			  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No channels");
 		  } else {
-			  ChannelsMapper.parsePutData(root.get("channels"));
+			  ChannelsMapper.parsePutData(stream, root.get("channels"));
 		  }
 
 	  } catch (JsonProcessingException e) {
 		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
 	  } catch (IOException e) {
 		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
-	  }
-
-	  // Parse location field
-	  try {
-		  if (!root.path("channels").path("location").path("current-value").isMissingNode()) {
-			  // Check is geojson
-			  GeoPointFieldMapper.parse(root.get("channels").get("location").get("current-value"));
-		  }
-	  } catch (IOException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
-	  } catch (MapperParsingException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, detailedMessage(e));
-	  } catch (Exception e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 	  }
 
 	  ((ObjectNode)dataRoot).putAll((ObjectNode)root);
