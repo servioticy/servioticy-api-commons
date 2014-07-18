@@ -34,6 +34,7 @@ import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.StreamsMapper;
 
+
 public class SO {
   protected static ObjectMapper mapper = new ObjectMapper();
   protected String soKey, userId, soId;
@@ -86,8 +87,10 @@ public class SO {
       ((ObjectNode)soRoot).putAll((ObjectNode)root);
 
       // Parsing streams
-      if (!root.path("streams").isMissingNode()) {
-    	  ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
+      if (root.path("streams").isMissingNode()) {
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object without streams");
+      } else {
+        ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
       }
 
       // If is a CSO with groups field create the derivate subscriptions
@@ -95,11 +98,11 @@ public class SO {
     	  createGroupsSubscriptions(root.get("groups"));
       }
     } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
+    		  "JsonProcessingException - " + e.getMessage());
     } catch (IOException e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
-
   }
 
   /** Update the Service Object
@@ -239,10 +242,10 @@ public class SO {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
 
     // Get the Subscriptions
-    List<String> IDs = externalOnly ? 
-    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) : 
+    List<String> IDs = externalOnly ?
+    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) :
     				   SearchEngine.getAllSubscriptionsByStream(soId, streamId);
-    				   
+
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     JsonNode root = mapper.createObjectNode();

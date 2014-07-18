@@ -22,7 +22,7 @@ public class ErrorInfo {
   private int status;
   private String message;
   private String info;
-  private String defaultInfo = "api.servIoTicy.com";
+  private String defaultInfo = "docs.servIoTicy.com";
 
   public ErrorInfo() {}
 
