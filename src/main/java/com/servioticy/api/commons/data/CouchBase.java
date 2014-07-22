@@ -89,7 +89,7 @@ public class CouchBase {
       ViewResponse result = cli_so.query(view, query);
       for(ViewRow row : result) {
         if (row.getKey() != null)
-          sos.add(row.getValue());
+          sos.add(row.getKey());
         }
     } catch (Exception e){
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view");
