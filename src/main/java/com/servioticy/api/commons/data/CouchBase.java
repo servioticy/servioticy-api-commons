@@ -77,6 +77,38 @@ public class CouchBase {
   }
 
   /**
+   * @return all the Service Objects as String
+   */
+  public static String getAllSOs() {
+    ArrayList<String> sos = new ArrayList<String>();
+
+    try {
+      View view = cli_so.getView("index", "byIndex");
+      Query query = new Query();
+      query.setStale(Stale.FALSE);
+      ViewResponse result = cli_so.query(view, query);
+      for(ViewRow row : result) {
+        if (row.getKey() != null)
+          sos.add(row.getValue());
+        }
+    } catch (Exception e){
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view");
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+    String str_sos = null;
+    try {
+      str_sos = mapper.writeValueAsString(sos);
+    } catch (JsonProcessingException e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+
+    return str_sos;
+  }
+
+  
+  
+  /**
    * @param userId
    * @return all the Service Objects as String
    */
