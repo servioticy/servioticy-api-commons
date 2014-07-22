@@ -32,11 +32,11 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter{
   public ContainerRequest filter(ContainerRequest request) {
 
     if (!request.getMethod().equals(("OPTIONS"))) {
-//      // Check Authorization header and obtain the userId
-//      Authorization aut = new Authorization(request.getRequestHeaders());
+      // Obtain the authorization
+      Authorization aut = new Authorization(request.getRequestHeaders());
 
 //      this.servletRequest.setAttribute("userId", aut.getUserId());
-//      this.servletRequest.setAttribute("aut", aut);
+      this.servletRequest.setAttribute("aut", aut);
     }
 
     return request;

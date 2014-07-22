@@ -15,56 +15,62 @@
  ******************************************************************************/
 package com.servioticy.api.commons.utils;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import com.servioticy.api.commons.data.SO;
-import com.servioticy.api.commons.data.SQLite;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+
+import de.passau.uni.sec.compose.pdp.servioticy.LocalPDP;
+import de.passau.uni.sec.compose.pdp.servioticy.PDP;
+import de.passau.uni.sec.compose.pdp.servioticy.exception.PDPServioticyException;
 
 /*
  * Class to manage REST API Authorization
  */
 public class Authorization {
-  private ResultSet rs;
+//  private ResultSet rs;
   private String userId;
+  private String autorizationToken;
 
   public Authorization() {}
 
   public Authorization(MultivaluedMap<String, String> headerParams) {
     // Check if exists request header Authorization
-    String autorizationToken = headerParams.getFirst("Authorization");
+    autorizationToken = headerParams.getFirst("Authorization");
     if (autorizationToken == null)
       throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "Missing Authorization Header");
-
-    // Check if exists user with token api
-    try {
-      SQLite db = new SQLite();
-      rs = db.queryDB("select * from user where api_token = '" + autorizationToken + "'");
-      if (!rs.next())
-        throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, null);
-
-      // Obtain the uuid from the autorizationToken
-      rs = db.queryDB("select uuid from user where api_token = '" + autorizationToken + "'");
-      if (!rs.next()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-      }
-      userId = rs.getString("uuid");
-
-      db.close(); } catch (ClassNotFoundException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    } catch (SQLException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    }
+//
+//    // Check if exists user with token api
+//    try {
+//      SQLite db = new SQLite();
+//      rs = db.queryDB("select * from user where api_token = '" + autorizationToken + "'");
+//      if (!rs.next())
+//        throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, null);
+//
+//      // Obtain the uuid from the autorizationToken
+//      rs = db.queryDB("select uuid from user where api_token = '" + autorizationToken + "'");
+//      if (!rs.next()) {
+//        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//      }
+//      userId = rs.getString("uuid");
+//
+//      db.close(); } catch (ClassNotFoundException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//    } catch (SQLException e) {
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//    }
   }
 
   public void checkAuthorization(SO so) {
-    if (!so.getUserId().equals(userId) && !so.isPublic()) {
-      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized to obtain the Service Object");
-    }
+	try {
+	  PDP pdp = new LocalPDP();
+	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null,
+			  PDP.operationID.SendDataToServiceObject);
+	} catch (PDPServioticyException e) {
+      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
+    		  e.getMessage());
+	}
   }
 
   public String getUserId() {

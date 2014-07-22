@@ -79,11 +79,11 @@ public class SO {
 
     ((ObjectNode)soRoot).put("id", soId);
     ((ObjectNode)soRoot).put("userId", userId);
-    if (root.path("public").isMissingNode()) {
-      ((ObjectNode)soRoot).put("public", "false");
-    } else {
-      ((ObjectNode)soRoot).put("public", root.get("public").asText());
-    }
+//    if (root.path("public").isMissingNode()) {
+//      ((ObjectNode)soRoot).put("public", "false");
+//    } else {
+//      ((ObjectNode)soRoot).put("public", root.get("public").asText());
+//    }
     long time = System.currentTimeMillis();
     ((ObjectNode)soRoot).put("createdAt", time);
     ((ObjectNode)soRoot).put("updatedAt", time);
@@ -97,6 +97,10 @@ public class SO {
 
   public void appendSecurity(JsonNode root) {
     ((ObjectNode)soRoot).put("security", root);
+  }
+
+  public JsonNode getSecurity() {
+    return soRoot.get("security");
   }
 
   /** Update the Service Object
@@ -345,12 +349,12 @@ public class SO {
     return userId;
   }
 
-  public boolean isPublic() {
-    if (soRoot.get("public").asText().equals("true")) {
-      return true;
-    }
-    return false;
-  }
+//  public boolean isPublic() {
+//    if (soRoot.get("public").asText().equals("true")) {
+//      return true;
+//    }
+//    return false;
+//  }
 
   /**
    * @param streamId
