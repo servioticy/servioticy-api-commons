@@ -18,11 +18,13 @@ package com.servioticy.api.commons.utils;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 import de.passau.uni.sec.compose.pdp.servioticy.LocalPDP;
 import de.passau.uni.sec.compose.pdp.servioticy.PDP;
+import de.passau.uni.sec.compose.pdp.servioticy.PermissionCacheObject;
 import de.passau.uni.sec.compose.pdp.servioticy.exception.PDPServioticyException;
 
 /*
@@ -65,12 +67,32 @@ public class Authorization {
   public void checkAuthorization(SO so) {
 	try {
 	  PDP pdp = new LocalPDP();
+
+	  pdp.setIdmHost(Config.idm_host);
+	  pdp.setIdmPort(Config.idm_port);
+	  pdp.setIdmUser(Config.idm_user);
+	  pdp.setIdmPassword(Config.idm_password);
+
 	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null,
 			  PDP.operationID.SendDataToServiceObject);
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());
 	}
+  }
+
+  public PermissionCacheObject checkAuthorizationGetData(SO so, JsonNode su_secutiry, PermissionCacheObject pco) {
+	  PDP pdp = new LocalPDP();
+
+	  try {
+		return pdp.checkAuthorization(autorizationToken, so.getSecurity(), su_secutiry,
+				  pco, PDP.operationID.RetrieveServiceObjectData);
+	} catch (PDPServioticyException e) {
+      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
+    		  e.getMessage());
+	}
+
+
   }
 
   public String getUserId() {

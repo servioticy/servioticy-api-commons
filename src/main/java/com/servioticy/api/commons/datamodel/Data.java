@@ -84,6 +84,15 @@ public class Data {
 
   }
 
+  public void appendSecurity(JsonNode root) {
+    ((ObjectNode)dataRoot).put("security", root);
+  }
+
+  public JsonNode getSecurity() {
+    return dataRoot.get("security");
+  }
+
+
 
   /** Generate response to last update of all data
    *
