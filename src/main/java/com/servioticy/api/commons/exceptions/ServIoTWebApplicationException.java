@@ -29,7 +29,7 @@ public class ServIoTWebApplicationException extends WebApplicationException{
                 .entity(new ErrorInfo(status.getStatusCode(), message))
                 .type(MediaType.APPLICATION_JSON)
                 .header("Date", new Date(System.currentTimeMillis()))
-                .header("Server", "api.servIoTicy")
+                .header("Server", "api.servIoTicy.com")
                 .build());
     }
 
