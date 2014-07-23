@@ -19,6 +19,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
@@ -34,6 +35,8 @@ public class Authorization {
 //  private ResultSet rs;
   private String userId;
   private String autorizationToken;
+
+  protected static ObjectMapper mapper = new ObjectMapper();
 
   public Authorization() {}
 
@@ -81,18 +84,46 @@ public class Authorization {
 	}
   }
 
-  public PermissionCacheObject checkAuthorizationGetData(SO so, JsonNode su_secutiry, PermissionCacheObject pco) {
-	  PDP pdp = new LocalPDP();
+  public JsonNode checkAuthorizationPutSU(SO so) {
+	PDP pdp = new LocalPDP();
 
-	  try {
-		return pdp.checkAuthorization(autorizationToken, so.getSecurity(), su_secutiry,
-				  pco, PDP.operationID.RetrieveServiceObjectData);
+	pdp.setIdmHost(Config.idm_host);
+	pdp.setIdmPort(Config.idm_port);
+	pdp.setIdmUser(Config.idm_user);
+	pdp.setIdmPassword(Config.idm_password);
+
+	PermissionCacheObject pco = new PermissionCacheObject();
+    try {
+		pco = pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, PDP.operationID.SendDataToServiceObjectProv);
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());
 	}
 
+    JsonNode ret;
+    try {
+	  ret = mapper.readTree(pco.getCache().toString());
+    } catch (Exception e) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+    }
+    return ret;
+  }
 
+  public PermissionCacheObject checkAuthorizationGetData(SO so, JsonNode su_secutiry, PermissionCacheObject pco) {
+	PDP pdp = new LocalPDP();
+
+	pdp.setIdmHost(Config.idm_host);
+	pdp.setIdmPort(Config.idm_port);
+	pdp.setIdmUser(Config.idm_user);
+	pdp.setIdmPassword(Config.idm_password);
+
+	try {
+      return pdp.checkAuthorization(autorizationToken, so.getSecurity(), su_secutiry,
+    		  pco, PDP.operationID.RetrieveServiceObjectData);
+	} catch (PDPServioticyException e) {
+      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
+    		  e.getMessage());
+	}
   }
 
   public String getUserId() {
