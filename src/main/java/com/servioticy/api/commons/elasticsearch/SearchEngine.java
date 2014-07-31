@@ -212,7 +212,7 @@ public class SearchEngine {
 
         return res;
     }
-    
+
     public static List<String> getAllSubscriptionsBySrcAndDst(String soId) {
 
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
@@ -254,7 +254,7 @@ public class SearchEngine {
     public static String getSusbcriptionDocId(String subId) {
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.matchQuery("meta.id", subId))
+                .setQuery(QueryBuilders.wildcardQuery("meta.id", "*-"+subId))
                 .execute().actionGet();
 
         if(response.getHits().getTotalHits() > 0)
