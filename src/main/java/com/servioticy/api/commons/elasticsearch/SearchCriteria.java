@@ -96,7 +96,7 @@ public class SearchCriteria {
         if(timerange) {
             RangeFilterBuilder rangeFilter =
             		FilterBuilders.rangeFilter("doc.lastUpdate")
-                                  .from(rangefrom).to(rangeto)
+                                  .from((long)rangefrom).to((long)rangeto)
                                   .includeLower(true).includeUpper(true);
             //filter.append(rangeFilter.toString());
             global.add(rangeFilter);
