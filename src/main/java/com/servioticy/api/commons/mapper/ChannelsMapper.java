@@ -34,14 +34,14 @@ public class ChannelsMapper {
          				"channel " + channel + " without type info");
 			  } else {
 				// Enforcement type
-			    if (Arrays.asList(Types).contains(channel.getValue().get("type").asText()) == false) {
+			    if (Arrays.asList(Types).contains(channel.getValue().get("type").asText().toLowerCase()) == false) {
 //			      System.out.println(channel.getValue().get("type"));
 			      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
-			    		  "Channel " + channel.getKey() + " with incorrect type");
+			    		  "Channel " + channel.getKey() + " with incorrect type: " + channel.getValue().get("type").asText());
 			    }
 			    // Enforcement location
   			    if (channel.getKey().equals("location")) {
-				  if (!channel.getValue().get("type").equals("geo_point")) {
+				  if (!channel.getValue().get("type").asText().toLowerCase().equals("geo_point")) {
 					throw new ServIoTWebApplicationException(
 							Response.Status.BAD_REQUEST, "location channel has to be geo_point type");
 				  }
@@ -83,7 +83,7 @@ public class ChannelsMapper {
 			}
 
 			// parsing current-value
-			String type = stream.get("channels").get(channel.getKey()).get("type").asText();
+			String type = stream.get("channels").get(channel.getKey()).get("type").asText().toLowerCase();
 			parseType(type, channel);
 		}
 
