@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ public class Actuation {
 	private static ObjectMapper mapper = new ObjectMapper();
 	private JsonNode actRoot = mapper.createObjectNode();
 	private String id =  UUID.randomUUID().toString().replaceAll("-", "");
+	private static Logger LOG = org.apache.log4j.Logger.getLogger(Actuation.class);
 	
 	public static Actuation getFromJson(String Id, String storedData) {
 		
@@ -54,7 +57,8 @@ public class Actuation {
 			actRoot = mapper.readTree(storedData);
 			this.id = Id;
 		} catch (Exception e) {
-		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);		      
+			  LOG.error(e);
+		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 
@@ -65,7 +69,8 @@ public class Actuation {
 			currentStatus.put("status",newStatusIn);
 			currentStatus.put("updatedAt", System.currentTimeMillis());
 		} catch (Exception e) {
-		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);		      
+			  LOG.error(e);
+		      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 
 	}
