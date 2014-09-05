@@ -23,6 +23,8 @@ import java.sql.Statement;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
@@ -34,6 +36,7 @@ public class SQLite{
 
   private Connection connection = null;
   private Statement statement = null;
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(SQLite.class);
 
   public SQLite() throws ClassNotFoundException {
     // Create SQLite connection in every SQLite creation
@@ -44,11 +47,11 @@ public class SQLite{
       statement = connection.createStatement();
 
     } catch (SQLException e) {
-      System.out.println(e.getMessage());
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      System.out.println(e.getMessage());
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -56,7 +59,8 @@ public class SQLite{
     try {
       return statement.executeQuery(query);
     } catch (SQLException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -66,7 +70,8 @@ public class SQLite{
       statement.close();
       connection.close();
     } catch (SQLException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 

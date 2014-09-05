@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
 import org.elasticsearch.index.mapper.MapperParsingException;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -13,6 +14,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.GeoPointFieldMapper;
 
@@ -21,6 +23,7 @@ import static com.servioticy.api.commons.exceptions.ExceptionHelper.detailedMess
 public class ChannelsMapper {
 	private static ObjectMapper mapper = new ObjectMapper();
     private static final String[] Types = new String[] {"string", "number", "boolean", "geo_point" };
+    private static Logger LOG = org.apache.log4j.Logger.getLogger(ChannelsMapper.class);
 
 	public static JsonNode parseCreation(JsonNode root) throws ServIoTWebApplicationException, IOException {
 
@@ -49,8 +52,9 @@ public class ChannelsMapper {
 			  }
 		  }
 		} catch (JsonMappingException e) {
+		  LOG.error(e);
   		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
-  				  "Service Object with incorrect channels value");
+				  "Service Object with incorrect channels value: "+e.getMessage());
 		}
 		return root;
 	}
@@ -108,11 +112,14 @@ public class ChannelsMapper {
 		  try {
 		    GeoPointFieldMapper.parse(channel.getValue().get("current-value"));
 		  } catch (IOException e) {
-		    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
+			LOG.error(e);
+		    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
 		  } catch (MapperParsingException e) {
+			LOG.error(e);
 			throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, detailedMessage(e));
 		  } catch (Exception e) {
-		    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+			LOG.error(e);
+		    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
 		  }
 		}
 	  }

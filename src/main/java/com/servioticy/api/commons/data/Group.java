@@ -20,6 +20,8 @@ import java.util.ArrayList;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,6 +33,7 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Group {
   private static ObjectMapper mapper = new ObjectMapper();
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(Group.class);
 
   private String streamId, groupId;
   private ArrayList<String> soIds;
@@ -56,9 +59,11 @@ public class Group {
       }
 
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
   }
@@ -107,7 +112,7 @@ public class Group {
     String body;
 
     if (this.groupId == null)
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error retrieving group info");
 
     for (String soId : soIds) {
       so = CouchBase.getSO(soId);

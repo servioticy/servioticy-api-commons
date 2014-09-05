@@ -2,6 +2,7 @@ package com.servioticy.api.commons.utils;
 
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
 import org.apache.lucene.document.FieldType;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.settings.Settings;
@@ -24,10 +25,12 @@ import org.elasticsearch.index.mapper.geo.GeoPointFieldMapper.Defaults;
 import org.elasticsearch.index.similarity.SimilarityProvider;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class GeoPointFieldMapper {
 	private static org.elasticsearch.common.jackson.core.JsonFactory jsonFactory;
+	private static Logger LOG = org.apache.log4j.Logger.getLogger(GeoPointFieldMapper.class);
 
 	static {
         jsonFactory = new JsonFactory();
@@ -91,6 +94,7 @@ public class GeoPointFieldMapper {
     	try {
     		mapper.parse(context);
     	 } catch (Throwable e) {
+		 LOG.error(e);
     		 throw new MapperParsingException("failed to parse geo_point", e);
     	 }
     }

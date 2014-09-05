@@ -20,6 +20,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import net.spy.memcached.internal.OperationFuture;
 
 import com.couchbase.client.CouchbaseClient;
@@ -44,6 +46,8 @@ public class CouchBase {
   private static CouchbaseClient cli_private = Config.cli_private;
   private static CouchbaseClient cli_actuations = Config.cli_actuations;
 
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(CouchBase.class);
+
   /**
    * @param soId
    * @return
@@ -65,14 +69,17 @@ public class CouchBase {
       // Asynchronous set
       OperationFuture<Boolean> setOp = cli_so.set(so.getSOKey(), 0, so.getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error accessing CouchBase");
       }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -92,7 +99,8 @@ public class CouchBase {
           sos.add(row.getKey());
         }
     } catch (Exception e){
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view");
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: "+e.getMessage());
     }
 
     ObjectMapper mapper = new ObjectMapper();
@@ -100,7 +108,8 @@ public class CouchBase {
     try {
       str_sos = mapper.writeValueAsString(sos);
     } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     return str_sos;
@@ -126,7 +135,8 @@ public class CouchBase {
           sos.add(row.getValue());
         }
     } catch (Exception e){
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view");
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: "+e.getMessage());
     }
 
 
@@ -135,7 +145,8 @@ public class CouchBase {
     try {
       str_sos = mapper.writeValueAsString(sos);
     } catch (JsonProcessingException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     return str_sos;
@@ -147,13 +158,13 @@ public class CouchBase {
    */
   public static Subscription getSubscription(String subsId) {
     // Get the Subscriptions
-    String subsKey = SearchEngine.getSusbcriptionDocId(subsId);
-    if (subsKey == null)
-        return null;
+    //String subsKey = SearchEngine.getSusbcriptionDocId(subsId);
+    //if (subsKey == null)
+    //    return null;
 
-    String storedSubs = (String)cli_subscriptions.get(subsKey);
+    String storedSubs = (String)cli_subscriptions.get(subsId);
     if (storedSubs != null) {
-      return new Subscription(storedSubs, subsKey);
+      return new Subscription(storedSubs, subsId);
     }
     return null;
   }
@@ -167,7 +178,7 @@ public class CouchBase {
       OperationFuture<Boolean> setOp;
       setOp = cli_subscriptions.set(subs.getKey(), 0, subs.getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing subscription document");
       }
 
 //      // Update the SO stream with the subscription
@@ -177,11 +188,14 @@ public class CouchBase {
 //        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //      }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }
 
@@ -194,7 +208,7 @@ public class CouchBase {
       OperationFuture<Boolean> setOp;
       setOp = cli_data.set(data.getKey(), 0, data.getString());
       if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing data in CouchBase");
       }
 
 //      // TODO -> to maintain as Subscription (array) -> to improve
@@ -205,11 +219,14 @@ public class CouchBase {
 //        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //      }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -222,7 +239,7 @@ public class CouchBase {
      OperationFuture<Boolean> setOp;
      setOp = cli_actuations.set(actuation.getId(), 0, actuation.getStatus());
      if (!setOp.get().booleanValue()) {
-       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing actuation in CouchBase");
      }
 
 //     // TODO -> to maintain as Subscription (array) -> to improve
@@ -233,11 +250,14 @@ public class CouchBase {
 //       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //     }
    } catch (InterruptedException e) {
-     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	 LOG.error(e);
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    } catch (ExecutionException e) {
-     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	 LOG.error(e);
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    } catch (Exception e) {
-     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+	 LOG.error(e);
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    }
  }
 
@@ -319,14 +339,17 @@ public class CouchBase {
       // Asynchronous delete
       OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
       if (!deleteOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error deleting subscription from CouchBase");
       }
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -343,7 +366,8 @@ public class CouchBase {
     } catch (NullPointerException e) {
       return null;
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     if (json != null) {
@@ -364,13 +388,16 @@ public class CouchBase {
     // Check to see if our set succeeded
     try {
       if (!setOp.get().booleanValue())
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing OpID Document");
     } catch (InterruptedException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
