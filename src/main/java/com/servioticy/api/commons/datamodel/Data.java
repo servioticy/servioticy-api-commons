@@ -20,16 +20,20 @@ import java.util.List;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.ChannelsMapper;
 
 public class Data {
   protected static ObjectMapper mapper = new ObjectMapper();
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(Data.class);
 
   private String dataKey;
   private SO soParent;
@@ -47,7 +51,8 @@ public class Data {
       dataRoot = mapper.readTree(stored_data);
       this.dataKey = dataId;
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -88,9 +93,11 @@ public class Data {
 		  }
 
 	  } catch (JsonProcessingException e) {
+		  LOG.error(e);
 		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
 	  } catch (IOException e) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "IOException");
+		  LOG.error(e);
+		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
 	  }
 
 	  ((ObjectNode)dataRoot).putAll((ObjectNode)root);

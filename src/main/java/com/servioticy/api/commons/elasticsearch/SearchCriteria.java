@@ -3,6 +3,7 @@ package com.servioticy.api.commons.elasticsearch;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
+import org.apache.log4j.Logger;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -13,8 +14,11 @@ import org.elasticsearch.index.query.TermFilterBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.servioticy.api.commons.data.Group;
 
 public class SearchCriteria {
+
+	private static Logger LOG = org.apache.log4j.Logger.getLogger(SearchCriteria.class);
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -96,7 +100,7 @@ public class SearchCriteria {
         if(timerange) {
             RangeFilterBuilder rangeFilter =
             		FilterBuilders.rangeFilter("doc.lastUpdate")
-                                  .from(rangefrom).to(rangeto)
+                                  .from((long)rangefrom).to((long)rangeto)
                                   .includeLower(true).includeUpper(true);
             //filter.append(rangeFilter.toString());
             global.add(rangeFilter);
@@ -158,9 +162,9 @@ public class SearchCriteria {
             try {
                 res.append(field.getName() + ": " + field.get(this)+"\n");
             } catch (IllegalArgumentException e) {
-                e.printStackTrace();
+                LOG.error(e);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+		LOG.error(e);
             }
         }
 

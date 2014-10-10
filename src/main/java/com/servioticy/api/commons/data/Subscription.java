@@ -20,6 +20,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +30,7 @@ import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Subscription {
   private static ObjectMapper mapper = new ObjectMapper();
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(Subscription.class);
 
   private String subsKey, subsId;
   private SO soParent;
@@ -44,7 +47,8 @@ public class Subscription {
       this.subsKey = subsKey;
       this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -67,9 +71,11 @@ public class Subscription {
     try {
       root = mapper.readTree(body);
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     // Check if exists callback field in body request
@@ -128,7 +134,8 @@ public class Subscription {
       ((ObjectNode)root).put("id", subsId);
       ((ObjectNode)root).put("createdAt", subsRoot.get("createdAt").asLong());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
     return root.toString();
   }

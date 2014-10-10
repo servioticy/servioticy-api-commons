@@ -23,6 +23,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -39,6 +41,7 @@ public class SO {
   protected static ObjectMapper mapper = new ObjectMapper();
   protected String soKey, userId, soId;
   protected JsonNode soRoot = mapper.createObjectNode();
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(SO.class);
 
   /** Create a SO with a database stored Service Object
    *
@@ -51,7 +54,8 @@ public class SO {
       this.userId = soRoot.get("userId").asText();
       this.soKey = soId;
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 
@@ -98,10 +102,12 @@ public class SO {
     	  createGroupsSubscriptions(root.get("groups"));
       }
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
     		  "JsonProcessingException - " + e.getMessage());
     } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     ((ObjectNode)soRoot).put("id", soId);
@@ -142,9 +148,11 @@ public class SO {
         ((ObjectNode)soRoot).put("customFields", root.get("customFields"));
       }
 	} catch (JsonProcessingException e) {
+	  LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     // Update updatedAt time
@@ -183,15 +191,20 @@ public class SO {
         agroups.add(new Group(group.getValue(), group.getKey()));
       }
     } catch (JsonParseException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing groups");
     } catch (JsonMappingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error deserializing groups");
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error Json processing exception");
     } catch (IOException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in groups field");
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     // Check that soIds has the stream
@@ -218,6 +231,7 @@ public class SO {
       ((ObjectNode)root).put("api_token", soRoot.path("security").get("api_token").asText());
       ((ObjectNode)root).put("createdAt", soRoot.get("createdAt").asLong());
     } catch (Exception e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
     return root.toString();
@@ -234,7 +248,8 @@ public class SO {
       ((ObjectNode)root).put("id", soId);
       ((ObjectNode)root).put("updatedAt", soRoot.get("updatedAt").asLong());
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
     return root.toString();
   }
@@ -273,16 +288,28 @@ public class SO {
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     JsonNode root = mapper.createObjectNode();
+    if(root == null) { 
+      LOG.error("Could not create JSON mapper...");
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Could not create JSON mapper...");
+    }
     try {
-    	for(String id : IDs)
-    		subsArray.add(mapper.readTree(CouchBase.getSubscription(id).getString()));
+      for(String id : IDs) {
+        Subscription tmp = CouchBase.getSubscription(id);
+        if(tmp != null)
+          subsArray.add(mapper.readTree(CouchBase.getSubscription(id).getString()));
+        else
+          LOG.error("Subscription id: "+id+", reported by search engine but not found in CouchBase. Skipping...");
+      }
       ((ObjectNode)root).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subsArray)));
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");
     } catch (IOException e) {
+      LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
     }catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error("Error:",e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     return root.toString();
@@ -332,7 +359,8 @@ public class SO {
       }
       ((ObjectNode)root).put("streams", mapper.readTree(mapper.writeValueAsString(astreams)));
     } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     return root.toString();
