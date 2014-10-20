@@ -67,7 +67,7 @@ public class Authorization {
 //    }
   }
 
-  public void checkAuthorization(SO so) {
+  public void checkAuthorization(SO so, PDP.operationID opID) {
 	try {
 	  PDP pdp = new LocalPDP();
 
@@ -76,8 +76,7 @@ public class Authorization {
 	  pdp.setIdmUser(Config.idm_user);
 	  pdp.setIdmPassword(Config.idm_password);
 
-	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null,
-			  PDP.operationID.SendDataToServiceObject);
+	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());
