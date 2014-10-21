@@ -70,13 +70,19 @@ public class Authorization {
   public void checkAuthorization(SO so, PDP.operationID opID) {
 	try {
 	  PDP pdp = new LocalPDP();
+	  PermissionCacheObject ret;
 
 	  pdp.setIdmHost(Config.idm_host);
 	  pdp.setIdmPort(Config.idm_port);
 	  pdp.setIdmUser(Config.idm_user);
 	  pdp.setIdmPassword(Config.idm_password);
 
-	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
+//	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
+	  ret = pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
+	  if (ret.isPermission() == false) {
+              throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED,
+                              "Authentication failed, wrong credentials");
+	  }
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());
