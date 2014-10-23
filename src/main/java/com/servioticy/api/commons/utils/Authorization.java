@@ -107,7 +107,7 @@ public class Authorization {
 
     JsonNode ret;
     try {
-	  ret = mapper.readTree(pco.getCache().toString());
+	  ret = mapper.readTree(pco.getSecurityMetaData().toString());
     } catch (Exception e) {
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
     }
