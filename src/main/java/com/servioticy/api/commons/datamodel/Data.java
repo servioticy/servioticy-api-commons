@@ -26,7 +26,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.ChannelsMapper;
@@ -140,7 +139,7 @@ public class Data {
         else
             res.append(",");
 
-        res.append(update.getString());
+        res.append(update.responseData());
     }
 
     res.append("]}");
@@ -163,6 +162,14 @@ public class Data {
 		  return dataRoot.toString();
 	  else
 		  return "";
+  }
+
+  public String responseData() {
+    JsonNode root = dataRoot;
+
+    ((ObjectNode)root).remove("security");
+
+    return root.toString();
   }
 
   /**
