@@ -262,7 +262,9 @@ public class SO {
     JsonNode root = soRoot;
 
     ((ObjectNode)root).remove("userId");
+    ((ObjectNode)root).remove("public");
     ((ObjectNode)root).remove("data");
+    ((ObjectNode)root).remove("security");
 
     return root.toString();
   }
