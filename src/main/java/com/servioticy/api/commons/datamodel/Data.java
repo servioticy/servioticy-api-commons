@@ -164,6 +164,13 @@ public class Data {
 		  return "";
   }
 
+  public String getLastUpdate() {
+	  if(dataRoot!=null)
+	      return dataRoot.path("lastUpdate").toString();
+	  else
+		  return "";
+  }
+
   public String responseData() {
     JsonNode root = dataRoot;
 
