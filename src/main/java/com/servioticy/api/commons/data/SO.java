@@ -269,6 +269,20 @@ public class SO {
     return root.toString();
   }
 
+  /** Generate private response to getting a SO
+   *
+   * @return String
+   */
+  public String responsePrivateGetSO() {
+    JsonNode root = soRoot;
+
+    ((ObjectNode)root).remove("userId");
+    ((ObjectNode)root).remove("public");
+    ((ObjectNode)root).remove("data");
+
+    return root.toString();
+  }
+
   /** Return the subscriptions in output format
    *
    * @param streamId

@@ -120,6 +120,18 @@ public class Data {
    * @return String
    */
   public String responseLastUpdate() {
+    JsonNode root = dataRoot;
+    ((ObjectNode)root).remove("security");
+    
+    String response = "{ \"data\": [ " + root.toString() + " ] }";
+    return response;
+  }
+
+  /** Generate response to last update of all data
+   *
+   * @return String
+   */
+  public String responsePrivateLastUpdate() {
     String response = "{ \"data\": [ " + dataRoot.toString() + " ] }";
     return response;
   }
