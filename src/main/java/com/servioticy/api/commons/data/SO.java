@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.mapper.ActionsMapper;
 import com.servioticy.api.commons.mapper.StreamsMapper;
 
 
@@ -95,6 +96,11 @@ public class SO {
 		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object without streams");
       } else {
         ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
+      }
+      
+      // Parsing actuations if exists
+      if (!root.path("actions").isMissingNode()) {
+        ((ObjectNode)soRoot).put("actions", ActionsMapper.parse(root.get("actions")));
       }
 
       // If is a CSO with groups field create the derivate subscriptions
