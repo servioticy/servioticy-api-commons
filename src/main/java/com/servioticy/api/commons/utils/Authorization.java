@@ -66,6 +66,10 @@ public class Authorization {
 //      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //    }
   }
+  
+  public String getAcces_Token() {
+      return autorizationToken;
+  }
 
   public String getUserId() {
 	  PDP pdp = new LocalPDP();

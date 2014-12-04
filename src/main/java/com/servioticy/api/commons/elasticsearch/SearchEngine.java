@@ -263,6 +263,41 @@ public class SearchEngine {
             return null;
     }
 
+//    public static List<String> getAllSOS(String userId) {
+//
+//        SearchResponse scan = client.prepareSearch(serviceobjects).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.boolQuery()
+//                		  .should(QueryBuilders.matchQuery("doc.userId", userId))
+//                		 )
+//                .setSearchType(SearchType.SCAN)
+//                .setScroll(new TimeValue(60000))
+//                .execute().actionGet();
+//
+//        SearchResponse response = client.prepareSearch(serviceobjects).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.boolQuery()
+//                		  .should(QueryBuilders.matchQuery("doc.userId", userId))
+//                		 )
+//                .setSize((int)scan.getHits().getTotalHits())
+//                .execute().actionGet();
+//
+//        List<String> res = new ArrayList<String>();
+//
+//        if(response != null) {
+//            SearchHits hits = response.getHits();
+//            if(hits != null) {
+//                long count = hits.getTotalHits();
+//                if(count > 0) {
+//                    Iterator<SearchHit> iter = hits.iterator();
+//                    while(iter.hasNext()) {
+//                        SearchHit hit = iter.next();
+//                        res.add(hit.getId());
+//                    }
+//                }
+//            }
+//        }
+//
+//        return res;
+//    }
 
 }
 
