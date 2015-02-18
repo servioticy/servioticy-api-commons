@@ -136,6 +136,27 @@ public class SO {
     return soRoot.get("security");
   }
 
+  public void updateSecurity(String body) {
+
+	JsonNode root;
+	try {
+	  root = mapper.readTree(body);
+      if (!root.path("security").isMissingNode()) {
+        ((ObjectNode)soRoot).put("security", root.get("security"));
+      }
+	} catch (JsonProcessingException e) {
+	  LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+//	Security metadata modification does not modify the update timesatamp
+//    // Update updatedAt time
+//    ((ObjectNode)soRoot).put("updatedAt", System.currentTimeMillis());
+  }
+
   /** Update the Service Object
    *
    */
