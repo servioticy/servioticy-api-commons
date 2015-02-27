@@ -32,6 +32,7 @@ public class Subscription {
   private static ObjectMapper mapper = new ObjectMapper();
   private static Logger LOG = org.apache.log4j.Logger.getLogger(Subscription.class);
 
+//  private String subsKey, subsId, userId;
   private String subsKey, subsId;
   private SO soParent;
   private JsonNode subsRoot = mapper.createObjectNode();
@@ -45,6 +46,7 @@ public class Subscription {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
       this.subsKey = subsKey;
+//      this.userId = userId;
       this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       LOG.error(e);
@@ -58,7 +60,7 @@ public class Subscription {
    * @param streamId
    * @param body
    */
-  public Subscription(SO so, String streamId, String body) {
+  public Subscription(SO so, String streamId, String body, String userId) {
     JsonNode root;
 
     soParent = so;
@@ -93,15 +95,24 @@ public class Subscription {
     UUID uuid = UUID.randomUUID(); //UUID java library
 
     subsId= uuid.toString().replaceAll("-", "");
-    subsKey= soParent.getId() + "-" + streamId + "-" + subsId;
+    subsKey = subsId;
 
     ((ObjectNode)subsRoot).put("id", subsId);
+    ((ObjectNode)subsRoot).put("userId", userId);
     long time = System.currentTimeMillis();
     ((ObjectNode)subsRoot).put("createdAt", time);
     ((ObjectNode)subsRoot).put("updatedAt", time);
     ((ObjectNode)subsRoot).put("callback", root.get("callback").asText());
     ((ObjectNode)subsRoot).put("source", soParent.getId());
-    ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
+
+    // destination of pubsub subscription is the userId
+    if (root.get("callback").asText().equals("pubsub")) {
+      ((ObjectNode)subsRoot).put("destination", userId);
+    }
+    else{
+      ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
+    }
+
     ((ObjectNode)subsRoot).put("stream", streamId);
     if (!root.path("customFields").isMissingNode())
       ((ObjectNode)subsRoot).put("customFields", root.get("customFields"));
@@ -113,7 +124,6 @@ public class Subscription {
 
 //    // Put the subscription id in the so stream subscription array
 //    soParent.setSubscription(stream, subsId);
-
   }
 
   /**

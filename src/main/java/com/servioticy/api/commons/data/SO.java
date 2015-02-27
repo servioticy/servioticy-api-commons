@@ -81,9 +81,9 @@ public class SO {
       ((ObjectNode)soRoot).put("id", soId);
       ((ObjectNode)soRoot).put("userId", userId);
       if (root.path("public").isMissingNode()) {
-    	  ((ObjectNode)soRoot).put("public", "false");
+        ((ObjectNode)soRoot).put("public", "false");
       } else {
-    	  ((ObjectNode)soRoot).put("public", root.get("public").asText());
+        ((ObjectNode)soRoot).put("public", root.get("public").asText());
       }
       long time = System.currentTimeMillis();
       ((ObjectNode)soRoot).put("createdAt", time);
@@ -92,19 +92,19 @@ public class SO {
 
       // Parsing streams
       if (root.path("streams").isMissingNode()) {
-		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object without streams");
+        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Service Object without streams");
       } else {
         ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
       }
 
       // If is a CSO with groups field create the derivate subscriptions
       if (!root.path("groups").isMissingNode()) {
-    	  createGroupsSubscriptions(root.get("groups"));
+        createGroupsSubscriptions(root.get("groups"));
       }
     } catch (JsonProcessingException e) {
       LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
-    		  "JsonProcessingException - " + e.getMessage());
+          "JsonProcessingException - " + e.getMessage());
     } catch (IOException e) {
       LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
@@ -138,21 +138,21 @@ public class SO {
 
   public void updateSecurity(String body) {
 
-	JsonNode root;
-	try {
-	  root = mapper.readTree(body);
+  JsonNode root;
+  try {
+    root = mapper.readTree(body);
       if (!root.path("security").isMissingNode()) {
         ((ObjectNode)soRoot).put("security", root.get("security"));
       }
-	} catch (JsonProcessingException e) {
-	  LOG.error(e);
+  } catch (JsonProcessingException e) {
+    LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
       LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
-//	Security metadata modification does not modify the update timesatamp
+//  Security metadata modification does not modify the update timesatamp
 //    // Update updatedAt time
 //    ((ObjectNode)soRoot).put("updatedAt", System.currentTimeMillis());
   }
@@ -162,14 +162,14 @@ public class SO {
    */
   public void update(String body) {
 
-	JsonNode root;
-	try {
-	  root = mapper.readTree(body);
+  JsonNode root;
+  try {
+    root = mapper.readTree(body);
       if (!root.path("customFields").isMissingNode()) {
         ((ObjectNode)soRoot).put("customFields", root.get("customFields"));
       }
-	} catch (JsonProcessingException e) {
-	  LOG.error(e);
+  } catch (JsonProcessingException e) {
+    LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
     } catch (IOException e) {
       LOG.error(e);
@@ -235,7 +235,7 @@ public class SO {
 
     // Now create the subscriptions
     for (Group group : agroups) {
-      group.createSubscriptions(soId);
+      group.createSubscriptions(soId, userId);
     }
 
   }
@@ -319,13 +319,13 @@ public class SO {
 
     // Get the Subscriptions
     List<String> IDs = externalOnly ?
-    				   SearchEngine.getExternalSubscriptionsByStream(soId, streamId) :
-    				   SearchEngine.getAllSubscriptionsByStream(soId, streamId);
+               SearchEngine.getExternalSubscriptionsByStream(soId, streamId) :
+               SearchEngine.getAllSubscriptionsByStream(soId, streamId);
 
     ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
 
     JsonNode root = mapper.createObjectNode();
-    if(root == null) { 
+    if(root == null) {
       LOG.error("Could not create JSON mapper...");
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Could not create JSON mapper...");
     }
@@ -388,7 +388,7 @@ public class SO {
       JsonNode s;
 
       for (Map.Entry<String, JsonNode> stream : mstreams.entrySet()) {
-    	s = mapper.createObjectNode();
+      s = mapper.createObjectNode();
         ((ObjectNode)s).put("name", stream.getKey());
         ((ObjectNode)s).putAll((ObjectNode)stream.getValue());
         ((ObjectNode)s).remove("data");
@@ -464,7 +464,7 @@ public class SO {
    */
   public String getActuationsString() {
     //TODO: could be null?
-	  return soRoot.path("actions").toString();
+    return soRoot.path("actions").toString();
   }
 
   /**
@@ -472,18 +472,18 @@ public class SO {
    * @return the actutation JsonNode
    */
   public JsonNode getActuation(String actuationName) {
-	  JsonNode actions = soRoot.path("actions");
-	  if(actions == null) {
-		  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
-				  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
-	  }
-	  for (int i = 0; i < actions.size(); i ++) {
-		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
-			return actions.get(i);
-	  }
+    JsonNode actions = soRoot.path("actions");
+    if(actions == null) {
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+          "Actuation '"+actuationName+"' does not exist for SO: " + soId);
+    }
+    for (int i = 0; i < actions.size(); i ++) {
+    if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
+      return actions.get(i);
+    }
 
-	  throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
-			  "Actuation '"+actuationName+"' does not exist for SO: " + soId);
+    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+        "Actuation '"+actuationName+"' does not exist for SO: " + soId);
 
   }
 
@@ -495,18 +495,18 @@ public class SO {
 
   public boolean checkActuation(String actuationName) {
 
-	  JsonNode actions = soRoot.path("actions");
-	  if(actions == null) {
-		  //System.out.println("actions is null");
-		  return false;
-	  }
-	  for (int i = 0; i < actions.size(); i ++) {
-		//System.out.println(i+": "+actions.get(i).path("name").asText());
-		if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
-			return true;
-	  }
+    JsonNode actions = soRoot.path("actions");
+    if(actions == null) {
+      //System.out.println("actions is null");
+      return false;
+    }
+    for (int i = 0; i < actions.size(); i ++) {
+    //System.out.println(i+": "+actions.get(i).path("name").asText());
+    if(actions.get(i).path("name").asText().equalsIgnoreCase(actuationName))
+      return true;
+    }
 
-	  return false;
+    return false;
   }
 
 //  /** Update the Service Object updatedAt field
