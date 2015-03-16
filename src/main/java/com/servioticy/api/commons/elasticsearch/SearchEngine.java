@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
@@ -276,6 +277,21 @@ public class SearchEngine {
                     "More than one subscription with the same id");
         else
             return null;
+    }
+
+    public static long getRepeatedSubscriptions(String destination, String source, String callback, String stream) {
+//        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+        CountResponse response = client.prepareCount(subscriptions).setTypes("couchbaseDocument")
+                .setQuery(QueryBuilders.boolQuery()
+                		  .must(QueryBuilders.termQuery("doc.destination", destination))
+                		  .must(QueryBuilders.termQuery("doc.source", source))
+                		  .must(QueryBuilders.termQuery("doc.callback", callback))
+                		  .must(QueryBuilders.termQuery("doc.stream", stream))
+                		 )
+                .execute().actionGet();
+        
+//        long total_hits = response.getCount();
+        return response.getCount();
     }
 }
 

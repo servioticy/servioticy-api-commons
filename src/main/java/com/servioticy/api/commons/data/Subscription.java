@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class Subscription {
@@ -88,6 +89,13 @@ public class Subscription {
     // Check if exists destination field in body request
     if (root.path("destination").isMissingNode())
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No destination in the request");
+    
+    // Check repeated subscriptions for pubsub subscriptions
+    if (root.get("callback").asText().equals("pubsub"))
+      if (SearchEngine.getRepeatedSubscriptions(root.get("destination").asText(),
+                                                soParent.getId(), "pubsub", streamId) > 0)
+        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Duplicated pubsub subscription");
+        
 
     // OK, create the subscription
 
