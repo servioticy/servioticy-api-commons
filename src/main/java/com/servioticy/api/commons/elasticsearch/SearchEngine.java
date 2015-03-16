@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.core.Response;
+
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
@@ -13,12 +15,12 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.sort.SortOrder;
 
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
 public class SearchEngine {
@@ -251,19 +253,30 @@ public class SearchEngine {
         return res;
     }
 
-    public static String getSusbcriptionDocId(String subId) {
+    public static String getSubscriptionDocId(String subsId) {
+
+//        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.wildcardQuery("meta.id", "*-"+subId))
+//                .execute().actionGet();
+//
+//        if(response.getHits().getTotalHits() > 0)
+//            return response.getHits().getHits()[0].getId();
+//        else
+//            return null;
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.wildcardQuery("meta.id", "*-"+subId))
+                .setQuery(QueryBuilders.termQuery("doc.id", subsId))
                 .execute().actionGet();
 
-        if(response.getHits().getTotalHits() > 0)
+        long total_hits = response.getHits().getTotalHits();
+        if (total_hits == 1)
             return response.getHits().getHits()[0].getId();
+        else if(total_hits > 1)
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                    "More than one subscription with the same id");
         else
             return null;
     }
-
-
 }
 
 
