@@ -47,7 +47,10 @@ public class Subscription {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
       this.subsKey = subsKey;
-      this.userId = subsRoot.get("userId").asText();
+
+      if (!subsRoot.path("userId").isMissingNode())
+        this.userId = subsRoot.get("userId").asText();
+
       this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       LOG.error(e);
