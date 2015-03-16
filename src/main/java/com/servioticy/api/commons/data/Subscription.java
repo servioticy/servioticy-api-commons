@@ -33,6 +33,7 @@ public class Subscription {
   private static Logger LOG = org.apache.log4j.Logger.getLogger(Subscription.class);
 
   private String subsKey, subsId;
+  private String userId;
   private SO soParent;
   private JsonNode subsRoot = mapper.createObjectNode();
 
@@ -45,6 +46,7 @@ public class Subscription {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
       this.subsKey = subsKey;
+      this.userId = subsRoot.get("userId").asText();
       this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       LOG.error(e);
@@ -58,11 +60,12 @@ public class Subscription {
    * @param streamId
    * @param body
    */
-  public Subscription(SO so, String streamId, String body) {
+  public Subscription(SO so, String userId, String streamId, String body) {
     JsonNode root;
 
     soParent = so;
     JsonNode stream = soParent.getStream(streamId);
+    this.userId = userId;
 
     // Check if exists this streamId in the Service Object
     if (stream == null)
@@ -96,6 +99,7 @@ public class Subscription {
     subsKey= soParent.getId() + "-" + streamId + "-" + subsId;
 
     ((ObjectNode)subsRoot).put("id", subsId);
+    ((ObjectNode)subsRoot).put("userId", userId);
     long time = System.currentTimeMillis();
     ((ObjectNode)subsRoot).put("createdAt", time);
     ((ObjectNode)subsRoot).put("updatedAt", time);
@@ -140,6 +144,18 @@ public class Subscription {
     return root.toString();
   }
 
+  /** Generate response to getting a SO
+   *
+   * @return String
+   */
+  public String responseGetSO() {
+    JsonNode root = subsRoot;
+
+    ((ObjectNode)root).remove("userId");
+
+    return root.toString();
+  }
+
   /**
    * @return Subscription as String
    */
@@ -161,4 +177,10 @@ public class Subscription {
     return subsId;
   }
 
+  /**
+   * @return the user Id
+   */
+  public String getUserId() {
+    return userId;
+  }
 }

@@ -197,7 +197,7 @@ public class SO {
 
     // Now create the subscriptions
     for (Group group : agroups) {
-      group.createSubscriptions(soId);
+      group.createSubscriptions(soId, userId);
     }
 
   }

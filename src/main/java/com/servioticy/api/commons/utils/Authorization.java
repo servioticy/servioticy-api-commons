@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.data.SQLite;
+import com.servioticy.api.commons.data.Subscription;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 /*
@@ -63,7 +64,19 @@ public class Authorization {
 
   public void checkAuthorization(SO so) {
     if (!so.getUserId().equals(userId) && !so.isPublic()) {
-      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized to obtain the Service Object");
+      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized");
+    }
+  }
+
+  public void checkOwner(SO so) {
+    if (!so.getUserId().equals(userId)) {
+      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized");
+    }
+  }
+
+  public void checkOwner(Subscription subs) {
+    if (!subs.getUserId().equals(userId)) {
+      throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized");
     }
   }
 
