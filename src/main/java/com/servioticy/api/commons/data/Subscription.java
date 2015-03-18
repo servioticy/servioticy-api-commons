@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.security.IDM;
 
@@ -61,7 +62,7 @@ public class Subscription {
    * @param streamId
    * @param body
    */
-  public Subscription(String accessToken, SO so, String streamId, String body, String userId) {
+  public Subscription(String accessToken, String userId, SO so, String streamId, String body) {
     JsonNode root;
 
     soParent = so;
@@ -86,8 +87,8 @@ public class Subscription {
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No callback in the request");
 
     // Check if exists destination field in body request
-    if (root.path("destination").isMissingNode())
-      throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No destination in the request");
+    if (root.path("destination").isMissingNode() && !root.get("callback").asText().equals("pubsub"))
+        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "No destination in the request");
 
     // OK, create the subscription
 
@@ -108,7 +109,11 @@ public class Subscription {
 
     // destination of pubsub subscription is the userId
     if (root.get("callback").asText().equals("pubsub")) {
-      ((ObjectNode)subsRoot).put("destination", IDM.random_auth_token(accessToken));
+        String destination = IDM.random_auth_token(accessToken);
+        if (SearchEngine.getRepeatedSubscriptions(destination, soParent.getId(), "pubsub", streamId) > 0)
+            throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Duplicated pubsub subscription");
+
+      ((ObjectNode)subsRoot).put("destination", destination);
     }
     else{
       ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());

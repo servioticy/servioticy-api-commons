@@ -120,7 +120,7 @@ public class Group {
       body = "{ " + "\"callback\" : " + "\"internal\", \"destination\":  \"" + destination + "\", \"customFields\": { \"groupId\": \"" + groupId + "\" }" + " }";
 
       // Create Subscription
-      Subscription subs = new Subscription(accessToken, so, streamId, body, userId);
+      Subscription subs = new Subscription(accessToken, userId, so, streamId, body);
 
       // Store in Couchbase
       CouchBase.setSubscription(subs);

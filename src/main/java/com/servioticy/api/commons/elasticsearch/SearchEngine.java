@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
@@ -13,7 +14,6 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
@@ -251,17 +251,19 @@ public class SearchEngine {
         return res;
     }
 
-    public static String getSusbcriptionDocId(String subId) {
-
-        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.wildcardQuery("meta.id", "*-"+subId))
+    public static long getRepeatedSubscriptions(String destination, String source, String callback, String stream) {
+        CountResponse response = client.prepareCount(subscriptions).setTypes("couchbaseDocument")
+                .setQuery(QueryBuilders.boolQuery()
+                        .must(QueryBuilders.termQuery("doc.destination", destination))
+                        .must(QueryBuilders.termQuery("doc.source", source))
+                        .must(QueryBuilders.termQuery("doc.callback", callback))
+                        .must(QueryBuilders.termQuery("doc.stream", stream))
+                        )
                 .execute().actionGet();
 
-        if(response.getHits().getTotalHits() > 0)
-            return response.getHits().getHits()[0].getId();
-        else
-            return null;
-    }
+        // long total_hits = response.getCount();
+        return response.getCount();
+     }
 
 //    public static List<String> getAllSOS(String userId) {
 //
