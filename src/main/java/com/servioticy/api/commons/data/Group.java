@@ -107,7 +107,7 @@ public class Group {
    *
    * @param destination
    */
-  public void createSubscriptions(String destination, String userId) {
+  public void createSubscriptions(String accessToken, String destination, String userId) {
     SO so;
     String body;
 
@@ -120,7 +120,7 @@ public class Group {
       body = "{ " + "\"callback\" : " + "\"internal\", \"destination\":  \"" + destination + "\", \"customFields\": { \"groupId\": \"" + groupId + "\" }" + " }";
 
       // Create Subscription
-      Subscription subs = new Subscription(so, streamId, body, userId);
+      Subscription subs = new Subscription(accessToken, so, streamId, body, userId);
 
       // Store in Couchbase
       CouchBase.setSubscription(subs);

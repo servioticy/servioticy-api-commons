@@ -80,6 +80,51 @@ public class IDM {
 
 		return null;
 	}
+	
+	public static String random_auth_token(String accessToken) {
+        ObjectMapper mapper = new ObjectMapper();
+
+		IDMCommunicator com = new IDMCommunicator(Config.idm_user, Config.idm_password,
+		                                          Config.idm_host, Config.idm_port);
+
+		String response = null;
+		try {
+            response = com.getInformationForUser(accessToken);
+        } catch (PDPServioticyException e) {
+			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+        }
+
+		JsonNode root;
+        try {
+            root = mapper.readTree(response);
+        } catch (Exception e) {
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+        if (root.path("random_auth_token").isMissingNode())
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+        
+        return root.get("random_auth_token").asText();
+	    
+	}
+	
+//	public static String getInformationForUser(String accessToken) {
+//		IDMCommunicator com = new IDMCommunicator(Config.idm_user, Config.idm_password,
+//		                                          Config.idm_host, Config.idm_port);
+//
+//		String response = null;
+//		try {
+//            response = com.getInformationForUser(accessToken);
+//        } catch (PDPServioticyException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
+//        }
+//		
+//		System.out.println(response);
+//
+//	    return response;
+//	}
 
 
 }

@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.elasticsearch.SearchEngine;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.mapper.StreamsMapper;
+import com.servioticy.api.commons.security.IDM;
+import com.servioticy.api.commons.utils.Config;
 
 
 public class SO {
@@ -64,7 +66,7 @@ public class SO {
    * @param userId
    * @param body
    */
-  public SO(String userId, String body) {
+  public SO(String accessToken, String userId, String body) {
     UUID uuid = UUID.randomUUID();
 
     // servioticy key = soId
@@ -97,10 +99,6 @@ public class SO {
         ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
       }
 
-      // If is a CSO with groups field create the derivate subscriptions
-      if (!root.path("groups").isMissingNode()) {
-        createGroupsSubscriptions(root.get("groups"));
-      }
     } catch (JsonProcessingException e) {
       LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
@@ -112,25 +110,28 @@ public class SO {
 
     ((ObjectNode)soRoot).put("id", soId);
     ((ObjectNode)soRoot).put("userId", userId);
-//    if (root.path("public").isMissingNode()) {
-//      ((ObjectNode)soRoot).put("public", "false");
-//    } else {
-//      ((ObjectNode)soRoot).put("public", root.get("public").asText());
-//    }
+
     long time = System.currentTimeMillis();
     ((ObjectNode)soRoot).put("createdAt", time);
     ((ObjectNode)soRoot).put("updatedAt", time);
+
     ((ObjectNode)soRoot).putAll((ObjectNode)root);
+
+    // Security stuff
+    JsonNode security = IDM.PostSO(accessToken, soId, true, false, false, Config.idm_host, Config.idm_port);
+    if (security == null)
+    	throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "");
+    ((ObjectNode)soRoot).put("security", security);
 
     // If is a CSO with groups field create the derivate subscriptions
     if (!root.path("groups").isMissingNode()) {
-      createGroupsSubscriptions(root.get("groups"));
+      createGroupsSubscriptions(accessToken, root.get("groups"));
     }
   }
 
-  public void appendSecurity(JsonNode root) {
-    ((ObjectNode)soRoot).put("security", root);
-  }
+//  public void appendSecurity(JsonNode root) {
+//    ((ObjectNode)soRoot).put("security", root);
+//  }
 
   public JsonNode getSecurity() {
     return soRoot.get("security");
@@ -201,7 +202,7 @@ public class SO {
    *
    * @param JsonNode representing groups information
    */
-  public void createGroupsSubscriptions(JsonNode root) {
+  public void createGroupsSubscriptions(String accessToken, JsonNode root) {
     ArrayList<Group> agroups = new ArrayList<Group>();
 
     try {
@@ -235,7 +236,7 @@ public class SO {
 
     // Now create the subscriptions
     for (Group group : agroups) {
-      group.createSubscriptions(soId, userId);
+      group.createSubscriptions(accessToken, soId, userId);
     }
 
   }

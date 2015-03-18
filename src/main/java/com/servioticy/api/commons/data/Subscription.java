@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
+import com.servioticy.api.commons.security.IDM;
 
 public class Subscription {
   private static ObjectMapper mapper = new ObjectMapper();
@@ -60,7 +61,7 @@ public class Subscription {
    * @param streamId
    * @param body
    */
-  public Subscription(SO so, String streamId, String body, String userId) {
+  public Subscription(String accessToken, SO so, String streamId, String body, String userId) {
     JsonNode root;
 
     soParent = so;
@@ -107,7 +108,7 @@ public class Subscription {
 
     // destination of pubsub subscription is the userId
     if (root.get("callback").asText().equals("pubsub")) {
-      ((ObjectNode)subsRoot).put("destination", userId);
+      ((ObjectNode)subsRoot).put("destination", IDM.random_auth_token(accessToken));
     }
     else{
       ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
