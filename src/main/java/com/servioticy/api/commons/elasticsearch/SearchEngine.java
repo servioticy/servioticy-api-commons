@@ -149,15 +149,33 @@ public class SearchEngine {
 
     public static List<String> getExternalSubscriptionsByStream(String soId, String streamId) {
 
+//        SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+//                .setSearchType(SearchType.SCAN)
+//                .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
+//                .setScroll(new TimeValue(60000))
+//                .execute().actionGet();
+//        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+//                .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
+//                .setSize((int)scan.getHits().getTotalHits())
+//                .execute().actionGet();
+
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.boolQuery()
+                                       .must(QueryBuilders.termQuery("doc.source", soId))
+                                       .must(QueryBuilders.termQuery("doc.stream", streamId))
+                                       )
                 .setSearchType(SearchType.SCAN)
                 .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.boolQuery()
+                                       .must(QueryBuilders.termQuery("doc.source", soId))
+                                       .must(QueryBuilders.termQuery("doc.stream", streamId))
+                                       )
                 .setPostFilter(FilterBuilders.notFilter(FilterBuilders.termFilter("doc.callback", "internal")))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
@@ -183,14 +201,31 @@ public class SearchEngine {
 
     public static List<String> getAllSubscriptionsByStream(String soId, String streamId) {
 
+//        SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+//                .setSearchType(SearchType.SCAN)
+//                .setScroll(new TimeValue(60000))
+//                .execute().actionGet();
+//
+//        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+//                .setSize((int)scan.getHits().getTotalHits())
+//                .execute().actionGet();
+
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.boolQuery()
+                                       .must(QueryBuilders.termQuery("doc.source", soId))
+                                       .must(QueryBuilders.termQuery("doc.stream", streamId))
+                                       )
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .setQuery(QueryBuilders.boolQuery()
+                                       .must(QueryBuilders.termQuery("doc.source", soId))
+                                       .must(QueryBuilders.termQuery("doc.stream", streamId))
+                                       )
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
 

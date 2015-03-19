@@ -334,7 +334,7 @@ public class SO {
       for(String id : IDs) {
         Subscription tmp = CouchBase.getSubscription(id);
         if(tmp != null)
-          subsArray.add(mapper.readTree(CouchBase.getSubscription(id).getString()));
+          subsArray.add(mapper.readTree(tmp.responseGetSubs()));
         else
           LOG.error("Subscription id: "+id+", reported by search engine but not found in CouchBase. Skipping...");
       }

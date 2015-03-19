@@ -157,6 +157,17 @@ public class Subscription {
   }
 
   /**
+   * @return String
+   */
+  public String responseGetSubs() {
+      JsonNode root = subsRoot;
+      
+      ((ObjectNode)root).remove("userId");
+      
+      return root.toString();
+  }
+
+  /**
    * @return Subscription as String
    */
   public String getString() {
