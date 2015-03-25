@@ -372,6 +372,54 @@ public class SO {
 //    return null;
 ////    return map.toString();
   }
+  
+  /** Return the subscriptions in raw format
+  *
+  * @param streamId
+  * @return subscriptions in raw format
+  */
+ public String responseInternalSubscriptions(String streamId, boolean externalOnly) {
+
+   JsonNode stream = getStream(streamId);
+
+   // Check if exist this streamId in the Service Object
+   if (stream == null)
+     throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "There is no Stream: " + streamId + " in the Service Object");
+
+   // Get the Subscriptions
+   List<String> IDs = externalOnly ?
+              SearchEngine.getExternalSubscriptionsByStream(soId, streamId) :
+              SearchEngine.getAllSubscriptionsByStream(soId, streamId);
+
+   ArrayList<JsonNode> subsArray = new ArrayList<JsonNode>();
+
+   JsonNode root = mapper.createObjectNode();
+   if(root == null) {
+     LOG.error("Could not create JSON mapper...");
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Could not create JSON mapper...");
+   }
+   try {
+     for(String id : IDs) {
+       Subscription tmp = CouchBase.getSubscription(id);
+       if(tmp != null)
+         subsArray.add(mapper.readTree(tmp.getString())); // In raw format
+       else
+         LOG.error("Subscription id: "+id+", reported by search engine but not found in CouchBase. Skipping...");
+     }
+     ((ObjectNode)root).put("subscriptions", mapper.readTree(mapper.writeValueAsString(subsArray)));
+   } catch (JsonProcessingException e) {
+     LOG.error(e);
+     throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error parsing subscriptions array");
+   } catch (IOException e) {
+     LOG.error(e);
+     throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Error in subscriptions array");
+   }catch (Exception e) {
+     LOG.error("Error:",e);
+     throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+   }
+
+   return root.toString();
+ }
 
   /** Return the streams in output format
    *
