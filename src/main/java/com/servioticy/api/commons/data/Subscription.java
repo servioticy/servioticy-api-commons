@@ -34,8 +34,8 @@ public class Subscription {
   private static ObjectMapper mapper = new ObjectMapper();
   private static Logger LOG = org.apache.log4j.Logger.getLogger(Subscription.class);
 
-//  private String subsKey, subsId, userId;
-  private String subsKey, subsId;
+  private String subsKey, subsId, userId;
+//  private String subsKey, subsId;
   private SO soParent;
   private JsonNode subsRoot = mapper.createObjectNode();
 
@@ -48,7 +48,7 @@ public class Subscription {
       subsRoot = mapper.readTree(storedSubs);
       this.subsId = subsRoot.get("id").asText();
       this.subsKey = subsKey;
-//      this.userId = userId;
+      this.userId = userId;
       this.soParent = CouchBase.getSO(subsRoot.get("source").asText());
     } catch (Exception e) {
       LOG.error(e);
