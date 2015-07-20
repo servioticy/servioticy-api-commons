@@ -163,6 +163,9 @@ public class Subscription {
       JsonNode root = subsRoot;
       
       ((ObjectNode)root).remove("userId");
+      ((ObjectNode)root).remove("destination");
+      ((ObjectNode)root).remove("stream");
+      ((ObjectNode)root).remove("source");
       
       return root.toString();
   }
