@@ -83,9 +83,6 @@ public class IDM {
 	
 	public static void DeleteSO(String auth_token,
 	  							String soId,
-								boolean requires_token,
-								boolean data_provenance_collection,
-								boolean payment,
 								String host,
 								int port) {
 
