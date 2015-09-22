@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 
 import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
 
 import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.protocol.views.Query;
@@ -71,13 +72,13 @@ public class CouchBase {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error accessing CouchBase");
       }
     } catch (InterruptedException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
@@ -98,7 +99,7 @@ public class CouchBase {
           sos.add(row.getKey());
         }
     } catch (Exception e){
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: "+e.getMessage());
     }
 
@@ -107,7 +108,7 @@ public class CouchBase {
     try {
       str_sos = mapper.writeValueAsString(sos);
     } catch (JsonProcessingException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
@@ -134,7 +135,7 @@ public class CouchBase {
           sos.add(row.getValue());
         }
     } catch (Exception e){
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: "+e.getMessage());
     }
 
@@ -144,7 +145,7 @@ public class CouchBase {
     try {
       str_sos = mapper.writeValueAsString(sos);
     } catch (JsonProcessingException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
@@ -187,13 +188,13 @@ public class CouchBase {
 //        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //      }
     } catch (InterruptedException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }
@@ -202,14 +203,38 @@ public class CouchBase {
    *
    * @param data
    */
-  public static void setData(Data data) {
-    try {
-      OperationFuture<Boolean> setOp;
-      setOp = cli_data.set(data.getKey(), 0, data.getString());
-      if (!setOp.get().booleanValue()) {
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing data in CouchBase");
-      }
+ public static void setData(Data data) {
+    OperationFuture<Boolean> setOp;
+    OperationStatus status;
+    int backoffexp = 0;
+    int tries = 10;
 
+    try {
+      do {
+        if (backoffexp > tries) {
+                LOG.error("Could not perform a set in CB after "+ tries + " tries.");
+                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing data in CouchBase");
+        }
+        setOp = cli_data.set(data.getKey(), 0, data.getString());
+        status = setOp.getStatus();
+        if (status.isSuccess()) {
+              break;
+        }
+
+        if (backoffexp > 0) {
+              double backoffMillis = Math.pow(2, backoffexp);
+              backoffMillis = Math.min(1000, backoffMillis); // 1 sec max
+              Thread.sleep((int) backoffMillis);
+              LOG.info("CB set backing off, tries so far: " + backoffexp);
+        }
+
+        backoffexp++;
+
+        if (!status.isSuccess()) {
+            LOG.error("CB set failed with status: " + status.getMessage());
+        }
+
+      } while (status.getMessage().equals("Temporary failure"));
 //      // TODO -> to maintain as Subscription (array) -> to improve
 //      // Update the SO stream with the data
 //      data.getSO().update();
@@ -218,16 +243,14 @@ public class CouchBase {
 //        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //      }
     } catch (InterruptedException e) {
-      LOG.error(e);
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
-    } catch (ExecutionException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
+
 
   /** Store new actuation
   *
@@ -249,13 +272,13 @@ public class CouchBase {
 //       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
 //     }
    } catch (InterruptedException e) {
-	 LOG.error(e);
+	 LOG.error(e.getMessage() ,e);
      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    } catch (ExecutionException e) {
-	 LOG.error(e);
+	 LOG.error(e.getMessage() ,e);
      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    } catch (Exception e) {
-	 LOG.error(e);
+	 LOG.error(e.getMessage() ,e);
      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
    }
  }
@@ -341,13 +364,13 @@ public class CouchBase {
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error deleting subscription from CouchBase");
       }
     } catch (InterruptedException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
@@ -365,7 +388,7 @@ public class CouchBase {
     } catch (NullPointerException e) {
       return null;
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
@@ -389,13 +412,13 @@ public class CouchBase {
       if (!setOp.get().booleanValue())
         throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing OpID Document");
     } catch (InterruptedException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (ExecutionException e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
