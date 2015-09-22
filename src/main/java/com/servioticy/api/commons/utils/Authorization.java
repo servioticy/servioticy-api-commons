@@ -33,7 +33,6 @@ import de.passau.uni.sec.compose.pdp.servioticy.exception.PDPServioticyException
  */
 public class Authorization {
 //  private ResultSet rs;
-  private String userId;
   private String autorizationToken;
 
   protected static ObjectMapper mapper = new ObjectMapper();

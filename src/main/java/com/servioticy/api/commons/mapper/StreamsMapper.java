@@ -11,7 +11,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class StreamsMapper {

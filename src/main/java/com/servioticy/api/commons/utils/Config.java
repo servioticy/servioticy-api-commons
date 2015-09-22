@@ -34,7 +34,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 
 import com.couchbase.client.CouchbaseClient;
-import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 //http://stackoverflow.com/questions/3153739/config-files-for-a-webapplication-load-once-and-store-where !!!
@@ -50,6 +49,7 @@ public class Config implements ServletContextListener {
   public static CouchbaseClient cli_data;
   public static CouchbaseClient cli_subscriptions;
   public static CouchbaseClient cli_actuations;
+  public static CouchbaseClient cli_security;
   public static List<URI> public_uris = new LinkedList<URI>();
 
   public static CouchbaseClient cli_private;
@@ -89,6 +89,7 @@ public class Config implements ServletContextListener {
           cli_actuations = new CouchbaseClient(public_uris, config.getProperty("actuations_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+          cli_security = new CouchbaseClient(private_uris, config.getProperty("security_bucket"), "");
 
           String elasticSearchServers = config.getProperty("search_servers");
           String elasticSearchPorts = config.getProperty("search_ports");

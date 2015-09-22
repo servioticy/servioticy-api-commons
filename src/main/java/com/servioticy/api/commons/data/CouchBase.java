@@ -15,7 +15,9 @@
  ******************************************************************************/
 package com.servioticy.api.commons.data;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
@@ -45,6 +47,7 @@ public class CouchBase {
   private static CouchbaseClient cli_subscriptions = Config.cli_subscriptions;
   private static CouchbaseClient cli_private = Config.cli_private;
   private static CouchbaseClient cli_actuations = Config.cli_actuations;
+  private static CouchbaseClient cli_security = Config.cli_security;
 
   private static Logger LOG = org.apache.log4j.Logger.getLogger(CouchBase.class);
 
@@ -429,5 +432,55 @@ public class CouchBase {
    */
   public static String getOpId(String key) {
     return (String)cli_private.get(key);
+  }
+
+  /**
+   * @param string
+   */
+  public static String setString(String body) {
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.readTree(body);
+    } catch (JsonProcessingException e) {
+        LOG.error(e);
+        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    UUID uuid = UUID.randomUUID();
+    String key = String.valueOf(System.currentTimeMillis()) + uuid.toString().replaceAll("-", "");
+    try {
+      // Asynchronous set
+      OperationFuture<Boolean> setOp = cli_security.set(key, 0, body);
+      if (!setOp.get().booleanValue()) {
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                "Error accessing CouchBase");
+      }
+    } catch (InterruptedException e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    } catch (ExecutionException e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    } catch (Exception e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+    
+    return key;
+  }
+
+  /**
+   * @param key
+   * @return
+   */
+  public static String getString(String key) {
+    String json = (String)cli_security.get(key);
+    if (json != null) {
+      return json;
+    }
+    return null;
   }
 }

@@ -25,7 +25,6 @@ import org.elasticsearch.index.mapper.geo.GeoPointFieldMapper.Defaults;
 import org.elasticsearch.index.similarity.SimilarityProvider;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.servioticy.api.commons.data.Group;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
 public class GeoPointFieldMapper {

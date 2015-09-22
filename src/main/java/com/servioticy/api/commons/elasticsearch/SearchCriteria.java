@@ -14,7 +14,6 @@ import org.elasticsearch.index.query.TermFilterBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.servioticy.api.commons.data.Group;
 
 public class SearchCriteria {
 
