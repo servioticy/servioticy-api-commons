@@ -120,7 +120,9 @@ public class Authorization {
 
 	PermissionCacheObject pco = new PermissionCacheObject();
     try {
-		pco = pdp.SendDataToServiceObjectProv(autorizationToken, so.getSecurity(), null, null, streamId);
+//		pco = pdp.SendDataToServiceObjectProv(autorizationToken, so.getSecurity(), null, null, streamId);
+		pco = pdp.GenericSendDatatoServiceObjectProv(autorizationToken, so.getSecurity(), null, null,
+		        streamId, so.getStream(streamId).toString());
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());

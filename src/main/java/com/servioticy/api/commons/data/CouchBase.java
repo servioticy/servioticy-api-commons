@@ -483,4 +483,44 @@ public class CouchBase {
     }
     return null;
   }
+
+  public static void deleteString(String key) {
+      cli_security.delete(key);
+  }
+
+
+  /**
+   * @param string
+   */
+  public static void setString(String key, String body) {
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.readTree(body);
+    } catch (JsonProcessingException e) {
+        LOG.error(e);
+        throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    try {
+      // Asynchronous set
+      OperationFuture<Boolean> setOp = cli_security.set(key, 0, body);
+      if (!setOp.get().booleanValue()) {
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                "Error accessing CouchBase");
+      }
+    } catch (InterruptedException e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    } catch (ExecutionException e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    } catch (Exception e) {
+      LOG.error(e.getMessage() ,e);
+      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+  }
+
 }
