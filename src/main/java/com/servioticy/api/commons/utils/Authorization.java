@@ -15,11 +15,17 @@
  ******************************************************************************/
 package com.servioticy.api.commons.utils;
 
+import java.io.IOException;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.servioticy.api.commons.data.SO;
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 
@@ -37,6 +43,8 @@ public class Authorization {
 
   protected static ObjectMapper mapper = new ObjectMapper();
 
+  private static Logger LOG = org.apache.log4j.Logger.getLogger(Authorization.class);
+
   public Authorization() {}
 
   public Authorization(MultivaluedMap<String, String> headerParams) {
@@ -44,26 +52,6 @@ public class Authorization {
     autorizationToken = headerParams.getFirst("Authorization");
     if (autorizationToken == null)
       throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "Missing Authorization Header");
-//
-//    // Check if exists user with token api
-//    try {
-//      SQLite db = new SQLite();
-//      rs = db.queryDB("select * from user where api_token = '" + autorizationToken + "'");
-//      if (!rs.next())
-//        throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, null);
-//
-//      // Obtain the uuid from the autorizationToken
-//      rs = db.queryDB("select uuid from user where api_token = '" + autorizationToken + "'");
-//      if (!rs.next()) {
-//        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-//      }
-//      userId = rs.getString("uuid");
-//
-//      db.close(); } catch (ClassNotFoundException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-//    } catch (SQLException e) {
-//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-//    }
   }
   
   public String getAcces_Token() {
@@ -109,31 +97,39 @@ public class Authorization {
     		  e.getMessage());
 	}
   }
+  
+  public JsonNode checkAuthorizationPutSU(SO so, String streamId, String body) {
+    JsonNode root;
+    try {
+        root = mapper.readTree(body);
+    } catch (JsonProcessingException e) {
+		LOG.error(e);
+		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+    } catch (IOException e) {
+		LOG.error(e);
+		throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
 
-  public JsonNode checkAuthorizationPutSU(SO so, String streamId) {
 	PDP pdp = new LocalPDP();
 
 	pdp.setIdmHost(Config.idm_host);
 	pdp.setIdmPort(Config.idm_port);
 	pdp.setIdmUser(Config.idm_user);
 	pdp.setIdmPassword(Config.idm_password);
+	pdp.setServioticyPrivateHost(Config.encription_url);
 
 	PermissionCacheObject pco = new PermissionCacheObject();
     try {
-//		pco = pdp.SendDataToServiceObjectProv(autorizationToken, so.getSecurity(), null, null, streamId);
 		pco = pdp.GenericSendDatatoServiceObjectProv(autorizationToken, so.getSecurity(), null, null,
-		        streamId, so.getStream(streamId).toString());
+		        streamId, root);
 	} catch (PDPServioticyException e) {
       throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
     		  e.getMessage());
 	}
+    
+    JsonNode ret = pco.getDecryptedUpdate();
+    ((ObjectNode)ret).put("security", pco.getSecurityMetaData());
 
-    JsonNode ret;
-    try {
-	  ret = mapper.readTree(pco.getSecurityMetaData().toString());
-    } catch (Exception e) {
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, null);
-    }
     return ret;
   }
 
