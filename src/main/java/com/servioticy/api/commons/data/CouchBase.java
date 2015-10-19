@@ -45,7 +45,7 @@ public class CouchBase {
   private static CouchbaseClient cli_so = Config.cli_so;
   private static CouchbaseClient cli_data = Config.cli_data;
   private static CouchbaseClient cli_subscriptions = Config.cli_subscriptions;
-  private static CouchbaseClient cli_private = Config.cli_private;
+//  private static CouchbaseClient cli_private = Config.cli_private;
   private static CouchbaseClient cli_actuations = Config.cli_actuations;
   private static CouchbaseClient cli_security = Config.cli_security;
 
@@ -402,37 +402,37 @@ public class CouchBase {
 
   }
 
-  /** Set the OpId control flow.
-   *
-   * @param key
-   * @param exp -> expiration time
-   */
-  public static void setOpId(String key, int exp) {
-    // Do an asynchronous set
-    OperationFuture<Boolean> setOp = cli_private.set(key, exp, "{}");
-    // Check to see if our set succeeded
-    try {
-      if (!setOp.get().booleanValue())
-        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing OpID Document");
-    } catch (InterruptedException e) {
-      LOG.error(e.getMessage() ,e);
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
-    } catch (ExecutionException e) {
-      LOG.error(e.getMessage() ,e);
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
-    } catch (Exception e) {
-      LOG.error(e.getMessage() ,e);
-      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
-    }
-  }
+//  /** Set the OpId control flow.
+//   *
+//   * @param key
+//   * @param exp -> expiration time
+//   */
+//  public static void setOpId(String key, int exp) {
+//    // Do an asynchronous set
+//    OperationFuture<Boolean> setOp = cli_private.set(key, exp, "{}");
+//    // Check to see if our set succeeded
+//    try {
+//      if (!setOp.get().booleanValue())
+//        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing OpID Document");
+//    } catch (InterruptedException e) {
+//      LOG.error(e.getMessage() ,e);
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+//    } catch (ExecutionException e) {
+//      LOG.error(e.getMessage() ,e);
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+//    } catch (Exception e) {
+//      LOG.error(e.getMessage() ,e);
+//      throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+//    }
+//  }
 
-  /**
-   * @param key
-   * @return the OpId as String
-   */
-  public static String getOpId(String key) {
-    return (String)cli_private.get(key);
-  }
+//  /**
+//   * @param key
+//   * @return the OpId as String
+//   */
+//  public static String getOpId(String key) {
+//    return (String)cli_private.get(key);
+//  }
 
   /**
    * @param string
