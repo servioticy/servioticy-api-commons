@@ -218,7 +218,8 @@ public class CouchBase {
                 LOG.error("Could not perform a set in CB after "+ tries + " tries.");
                 throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing data in CouchBase");
         }
-        setOp = cli_data.set(data.getKey(), 0, data.getString());
+//        setOp = cli_data.set(data.getKey(), 0, data.getString());
+        setOp = cli_data.set(data.getKey(), data.getExpiration(), data.getString());
         status = setOp.getStatus();
         if (status.isSuccess()) {
               break;

@@ -36,6 +36,7 @@ public class Data {
 
   private String dataKey;
   private SO soParent;
+  private int expirationTime;
   private JsonNode dataRoot = mapper.createObjectNode();
 
 
@@ -102,6 +103,13 @@ public class Data {
 	  ((ObjectNode)dataRoot).putAll((ObjectNode)root);
 
 	  dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
+	  
+	  int dataTTL = so.getDataTTL();
+	  if (dataTTL == -1) {
+	      expirationTime = 0;
+	  } else {
+	      expirationTime = ((int)(System.currentTimeMillis() / 1000L)) + dataTTL;
+	  }
 
   }
 
@@ -164,6 +172,13 @@ public class Data {
    */
   public String getKey() {
     return dataKey;
+  }
+
+  /**
+   * @return Expiration Time
+   */
+  public int getExpiration() {
+    return expirationTime;
   }
 
   /**

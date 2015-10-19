@@ -51,6 +51,8 @@ public class Config implements ServletContextListener {
   public static CouchbaseClient cli_actuations;
   public static CouchbaseClient cli_security;
   public static List<URI> public_uris = new LinkedList<URI>();
+  
+  public static int dataTTL;
 
   public static List<URI> private_uris = new LinkedList<URI>();
   
@@ -91,6 +93,8 @@ public class Config implements ServletContextListener {
           cli_security = new CouchbaseClient(private_uris, config.getProperty("security_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
           encription_url = config.getProperty("encription_url");
+          
+          dataTTL = Integer.parseInt(config.getProperty("so_datattl"));
 
           String elasticSearchServers = config.getProperty("search_servers");
           String elasticSearchPorts = config.getProperty("search_ports");

@@ -99,6 +99,15 @@ public class SO {
         ((ObjectNode)soRoot).put("streams", StreamsMapper.parse(root.get("streams")));
       }
 
+      if (root.path("dataTTL").isMissingNode()) {
+        ((ObjectNode)soRoot).put("dataTTL", Config.dataTTL);
+      } else {
+        if (!root.path("dataTTL").isInt()) {
+		  throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "The dataTTL has to be an Integer");
+        }
+        ((ObjectNode)soRoot).put("dataTTL", root.get("dataTTL").asInt());
+      }
+      
     } catch (JsonProcessingException e) {
       LOG.error(e);
       throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST,
@@ -492,6 +501,18 @@ public class SO {
   public String getUserId() {
     return userId;
   }
+
+  /**
+   * @return the user dataTTL
+   */
+  public int getDataTTL() {
+      if (soRoot.path("dataTTL").isMissingNode()) {
+        return Config.dataTTL;
+      } else {
+        return soRoot.get("dataTTL").asInt();
+      }
+  }
+
 
 //  public boolean isPublic() {
 //    if (soRoot.get("public").asText().equals("true")) {
