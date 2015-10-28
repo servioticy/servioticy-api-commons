@@ -24,6 +24,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 
 import com.couchbase.client.CouchbaseClient;
@@ -236,6 +237,7 @@ public class SearchEngine {
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                .addSort(SortBuilders.fieldSort("doc.lastUpdate").order(SortOrder.ASC).missing("_last"))
                 .addAggregation(max("max").field("lastUpdate"))
                 .execute().actionGet();
 
