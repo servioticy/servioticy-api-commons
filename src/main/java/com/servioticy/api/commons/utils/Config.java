@@ -50,6 +50,7 @@ public class Config implements ServletContextListener {
   public static CouchbaseClient cli_subscriptions;
   public static CouchbaseClient cli_actuations;
   public static CouchbaseClient cli_security;
+  public static CouchbaseClient cli_reputation;
   public static List<URI> public_uris = new LinkedList<URI>();
   
   public static int dataTTL;
@@ -92,6 +93,7 @@ public class Config implements ServletContextListener {
           cli_actuations = new CouchbaseClient(public_uris, config.getProperty("actuations_bucket"), "");
           cli_security = new CouchbaseClient(private_uris, config.getProperty("security_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
+          cli_reputation = new CouchbaseClient(public_uris, config.getProperty("reputation_bucket"), "");
           encription_url = config.getProperty("encription_url");
           
           dataTTL = Integer.parseInt(config.getProperty("so_datattl"));
@@ -137,8 +139,10 @@ public class Config implements ServletContextListener {
       // Disconnect to Couchbase
       cli_so.shutdown();
       cli_data.shutdown();
-      cli_subscriptions.shutdown();
       cli_actuations.shutdown();
+      cli_security.shutdown();
+      cli_subscriptions.shutdown();
+      cli_reputation.shutdown();
 
       // Disconnect to ElasticSearch
       elastic_client.close();

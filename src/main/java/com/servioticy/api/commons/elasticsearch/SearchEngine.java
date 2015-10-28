@@ -2,9 +2,16 @@ package com.servioticy.api.commons.elasticsearch;
 
 import static org.elasticsearch.search.aggregations.AggregationBuilders.max;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.ws.rs.core.Response;
 
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -19,6 +26,17 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.sort.SortOrder;
 
+import com.couchbase.client.CouchbaseClient;
+import com.couchbase.client.protocol.views.Query;
+import com.couchbase.client.protocol.views.Stale;
+import com.couchbase.client.protocol.views.View;
+import com.couchbase.client.protocol.views.ViewResponse;
+import com.couchbase.client.protocol.views.ViewRow;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
 
 public class SearchEngine {
@@ -48,38 +66,149 @@ public class SearchEngine {
     public static List<String> searchUpdates(String soId, String streamId, SearchCriteria filter) {
 
         SearchResponse scan  = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-        		.setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+        		.setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         System.out.println("QUERY: "+client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
                 .setPostFilter(filter.buildFilter()).toString());
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+                .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId + "-"))
                 .setSize((int)scan.getHits().getTotalHits())
                 .setPostFilter(filter.buildFilter())
                 .execute().actionGet();
+        
+        System.out.println("response = " + response);
 
         List<String> res = new ArrayList<String>();
 
         if(response != null) {
             SearchHits hits = response.getHits();
+            System.out.println("hits = " + hits);
             if(hits != null) {
                 long count = hits.getTotalHits();
+                System.out.println("count = " + count);
                 if(count > 0) {
                     Iterator<SearchHit> iter = hits.iterator();
                     while(iter.hasNext()) {
                         SearchHit hit = iter.next();
+                        System.out.println("hit = " + hit.getId());
                         res.add(hit.getId());
                     }
                 }
             }
         }
+        
+        System.out.println("res = " + res);
 
         return res;
+    }
+
+    public static String getAllUpdatesLastMinute() {
+        
+      CouchbaseClient cli_reputation = Config.cli_reputation;
+        
+      DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+      formatter.setTimeZone(TimeZone.getTimeZone("GMT"));;
+
+//      String startKey = formatter.format(new Date(1445617834345L));
+//      String startKey = formatter.format(new Date(1445617894000L));
+//      String startKey = formatter.format(new Date(1445617834345L));
+//      String endKey = formatter.format(new Date(1445617894000L));
+
+      String endKey = formatter.format(System.currentTimeMillis());
+      long millis = System.currentTimeMillis() - 60000;
+      String startKey = formatter.format(millis);
+
+      System.out.println("startKey = " + startKey);
+      System.out.println("endKey = " + endKey);
+
+      Map<String, Integer> allUpdates = new HashMap<String, Integer>();
+      JsonNode root;
+
+      try {
+        View view = cli_reputation.getView("webobject", "byDate");
+
+        Query query = new Query();
+        query.setStale(Stale.FALSE)
+             .setRangeStart(startKey)
+             .setRangeEnd(endKey)
+             .setInclusiveEnd(true);
+//             .setRangeStart(ComplexKey.of(startKey, "1437553443075a50e92918f114528ad264844d1c8b34c"));
+        
+        ViewResponse result = cli_reputation.query(view, query);
+        Integer value;
+        for(ViewRow row : result) {
+          if (row.getKey() != null) {
+              System.out.println(row.getValue());
+              value = allUpdates.get(row.getValue());
+              if (value == null)
+                  value = 0;
+              value++;
+              allUpdates.put(row.getValue(), value);
+          }
+        }
+      } catch (Exception e){
+        throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: "+e.getMessage());
+      }
+
+      ObjectMapper mapper = new ObjectMapper();
+      ArrayNode array = mapper.createArrayNode();
+
+      for (Map.Entry<String, Integer> entry : allUpdates.entrySet()) {
+          root = mapper.createObjectNode();
+          ((ObjectNode) root).put("doc_count", entry.getValue());
+          ((ObjectNode) root).put("key", entry.getKey());
+          array.add(root);
+      }
+      
+      root = mapper.createObjectNode();
+      ((ObjectNode) root).put("message", array);
+
+//        String mapAsJson = new ObjectMapper().writeValueAsString(allUpdates);
+//        System.out.println(mapAsJson);
+
+
+    return root.toString();
+        
+//        long millis = System.currentTimeMillis() - 60000;
+//
+//        System.out.println("QUERY: "+client.prepareSearch("zseclivewo").setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.boolQuery()
+//                                       .must(QueryBuilders.matchQuery("doc.src.webobject", "true"))
+//                                       .must(QueryBuilders.rangeQuery("doc.date").from(millis))
+//                                       )
+//                .setSize(0)
+//                .addAggregation(terms("distinct_soids").field("soid"))
+//                );
+//
+//        SearchResponse response = client.prepareSearch("zseclivewo").setTypes("couchbaseDocument")
+//                .setQuery(QueryBuilders.boolQuery()
+//                                       .must(QueryBuilders.matchQuery("doc.src.webobject", "true"))
+//                                       .must(QueryBuilders.rangeQuery("doc.date").from(millis))
+//                                       )
+//                .setSize(0)
+//                .addAggregation(terms("distinct_soids").field("soid"))
+//                .execute().actionGet();
+//        
+////        System.out.println("response = " + response);
+//
+////        Terms  terms = response.getAggregations().get("distinct_soids");
+////        Collection<Terms.Bucket> buckets = terms.getBuckets();
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        JsonNode root = mapper.createObjectNode();
+//        try {
+//            JsonNode res = mapper.readTree(response.toString());
+//            ((ObjectNode)root).put("message", res.get("aggregations").get("distinct_soids").get("buckets"));
+//        } catch (Exception e) {
+//            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+//        }
+//        
+//        return root.toString();
     }
 
     public static String getGroupLastUpdateDocId(String streamId, List<String> soIds) {
