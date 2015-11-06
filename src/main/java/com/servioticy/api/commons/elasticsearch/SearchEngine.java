@@ -20,6 +20,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 
 import com.servioticy.api.commons.exceptions.ServIoTWebApplicationException;
 import com.servioticy.api.commons.utils.Config;
@@ -52,16 +54,19 @@ public class SearchEngine {
 
         SearchResponse scan  = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
         		.setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+        		.addSort(SortBuilders.fieldSort("doc.lastUpdate").order(SortOrder.ASC).missing("_last"))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
 
         System.out.println("QUERY: "+client.prepareSearch(soupdates).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+                .addSort(SortBuilders.fieldSort("doc.lastUpdate").order(SortOrder.ASC).missing("_last"))
                 .setPostFilter(filter.buildFilter()).toString());
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.prefixQuery("meta.id",soId+"-" + streamId.toLowerCase() + "-"))
+                .addSort(SortBuilders.fieldSort("doc.lastUpdate").order(SortOrder.ASC).missing("_last"))
                 .setSize((int)scan.getHits().getTotalHits())
                 .setPostFilter(filter.buildFilter())
                 .execute().actionGet();
