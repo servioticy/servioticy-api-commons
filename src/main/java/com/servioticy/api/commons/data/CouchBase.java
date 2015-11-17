@@ -44,7 +44,7 @@ public class CouchBase {
   private static CouchbaseClient cli_so = Config.cli_so;
   private static CouchbaseClient cli_data = Config.cli_data;
   private static CouchbaseClient cli_subscriptions = Config.cli_subscriptions;
-  private static CouchbaseClient cli_private = Config.cli_private;
+  //private static CouchbaseClient cli_private = Config.cli_private;
   private static CouchbaseClient cli_actuations = Config.cli_actuations;
 
   private static Logger LOG = org.apache.log4j.Logger.getLogger(CouchBase.class);
@@ -404,7 +404,7 @@ public class CouchBase {
    * @param key
    * @param exp -> expiration time
    */
-  public static void setOpId(String key, int exp) {
+ /* public static void setOpId(String key, int exp) {
     // Do an asynchronous set
     OperationFuture<Boolean> setOp = cli_private.set(key, exp, "{}");
     // Check to see if our set succeeded
@@ -421,13 +421,13 @@ public class CouchBase {
       LOG.error(e.getMessage() ,e);
       throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
     }
-  }
+  }*/
 
   /**
    * @param key
    * @return the OpId as String
    */
-  public static String getOpId(String key) {
+  /*public static String getOpId(String key) {
     return (String)cli_private.get(key);
-  }
+  }*/
 }

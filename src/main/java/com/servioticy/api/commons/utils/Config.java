@@ -52,7 +52,7 @@ public class Config implements ServletContextListener {
   public static CouchbaseClient cli_actuations;
   public static List<URI> public_uris = new LinkedList<URI>();
 
-  public static CouchbaseClient cli_private;
+  //public static CouchbaseClient cli_private;
   public static List<URI> private_uris = new LinkedList<URI>();
 
   public static Client elastic_client;
@@ -83,7 +83,7 @@ public class Config implements ServletContextListener {
           cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
           cli_actuations = new CouchbaseClient(public_uris, config.getProperty("actuations_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
-          cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
+          //cli_private = new CouchbaseClient(private_uris, config.getProperty("private_bucket"), "");
 
           String elasticSearchServers = config.getProperty("search_servers");
           String elasticSearchPorts = config.getProperty("search_ports");
@@ -120,7 +120,7 @@ public class Config implements ServletContextListener {
       cli_so.shutdown();
       cli_data.shutdown();
       cli_subscriptions.shutdown();
-      cli_private.shutdown();
+      //cli_private.shutdown();
       cli_actuations.shutdown();
 
       // Disconnect to ElasticSearch
