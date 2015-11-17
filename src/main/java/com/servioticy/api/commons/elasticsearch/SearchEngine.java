@@ -211,8 +211,25 @@ public class SearchEngine {
 //        
 //        return root.toString();
     }
-
     public static String getGroupLastUpdateDocId(String streamId, List<String> soIds) {
+
+            String soId = new String();
+            long lastUpdate = 0, max;
+            for (String id : soIds) {
+                    SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
+                            .setQuery(QueryBuilders.prefixQuery("meta.id", id + "-" + streamId + "-"))
+                            .addAggregation(max("max").field("lastUpdate"))
+                            .execute().actionGet();
+                    max = (long) ((Max)response.getAggregations().get("max")).getValue();
+                    if ( max > lastUpdate ) {
+                        lastUpdate = max;
+                        soId = id;
+                    }
+            }
+            
+            return soId + "-" + streamId + "-" + lastUpdate;
+        }
+    /*public static String getGroupLastUpdateDocId(String streamId, List<String> soIds) {
 
         OrFilterBuilder IdsFilter = FilterBuilders.orFilter();
         for(String id : soIds)
@@ -230,7 +247,7 @@ public class SearchEngine {
         else
             return null;
 
-    }
+    }*/
 
     public static long getLastUpdateTimeStamp(String soId, String streamId) {
         //https://github.com/elasticsearch/elasticsearch/blob/master/src/test/java/org/elasticsearch/search/aggregations/metrics/MaxTests.java

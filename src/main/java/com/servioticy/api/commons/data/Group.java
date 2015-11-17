@@ -90,7 +90,19 @@ public class Group {
   /**
    * @return The lastUpdate value of the streamId for all the soIds
    */
-  public String lastUpdate() {
+    public String lastUpdate() {
+    Data data = null;
+
+    String groupLastUpdateDataID = SearchEngine.getGroupLastUpdateDocId(streamId, soIds);
+    if (groupLastUpdateDataID == null) {
+      return "{}";
+    }
+
+    data = CouchBase.getData(groupLastUpdateDataID);
+
+    return data.getString();
+  }
+  /*public String lastUpdate() {
     Data data = null;
 
     String groupLastUpdateDataID = SearchEngine.getGroupLastUpdateDocId(streamId, soIds);
@@ -101,7 +113,7 @@ public class Group {
     data = CouchBase.getData(groupLastUpdateDataID);
 
     return data.getString();
-  }
+  }*/
 
   /** Create subscriptions to destination for all the soIds
    *
