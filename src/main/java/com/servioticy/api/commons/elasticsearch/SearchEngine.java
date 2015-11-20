@@ -417,6 +417,38 @@ public class SearchEngine {
         return res;
     }
 
+    public static List<String> getAllSubscriptionsByDst(String soId) {
+​
+        SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+                .setQuery(QueryBuilders.matchQuery("doc.destination", soId))
+                .setSearchType(SearchType.SCAN)
+                .setScroll(new TimeValue(60000))
+                .execute().actionGet();
+​
+        SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
+                .setQuery(QueryBuilders.matchQuery("doc.destination", soId))
+                .setSize((int)scan.getHits().getTotalHits())
+                .execute().actionGet();
+​
+        List<String> res = new ArrayList<String>();
+​
+        if(response != null) {
+            SearchHits hits = response.getHits();
+            if(hits != null) {
+                long count = hits.getTotalHits();
+                if(count > 0) {
+                    Iterator<SearchHit> iter = hits.iterator();
+                    while(iter.hasNext()) {
+                        SearchHit hit = iter.next();
+                        res.add(hit.getId());
+                    }
+                }
+            }
+        }
+​
+        return res;
+    }
+
     public static long getRepeatedSubscriptions(String destination, String source, String callback, String stream) {
         CountResponse response = client.prepareCount(subscriptions).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.boolQuery()
