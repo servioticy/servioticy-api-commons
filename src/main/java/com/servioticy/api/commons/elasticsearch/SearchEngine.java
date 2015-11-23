@@ -418,20 +418,20 @@ public class SearchEngine {
     }
 
     public static List<String> getAllSubscriptionsByDst(String soId) {
-​
+
         SearchResponse scan = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.matchQuery("doc.destination", soId))
                 .setSearchType(SearchType.SCAN)
                 .setScroll(new TimeValue(60000))
                 .execute().actionGet();
-​
+
         SearchResponse response = client.prepareSearch(subscriptions).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.matchQuery("doc.destination", soId))
                 .setSize((int)scan.getHits().getTotalHits())
                 .execute().actionGet();
-​
+
         List<String> res = new ArrayList<String>();
-​
+
         if(response != null) {
             SearchHits hits = response.getHits();
             if(hits != null) {
@@ -445,7 +445,7 @@ public class SearchEngine {
                 }
             }
         }
-​
+
         return res;
     }
 
