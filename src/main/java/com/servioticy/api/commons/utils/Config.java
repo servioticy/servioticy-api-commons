@@ -91,6 +91,7 @@ public class Config implements ServletContextListener {
           cli_data = new CouchbaseClient(public_uris, config.getProperty("updates_bucket"), "");
           cli_actuations = new CouchbaseClient(public_uris, config.getProperty("actuations_bucket"), "");
           cli_subscriptions = new CouchbaseClient(public_uris, config.getProperty("subscriptions_bucket"), "");
+          cli_reputation = new CouchbaseClient(public_uris, config.getProperty("reputation_bucket"), "");
           encription_url = config.getProperty("encription_url");
 
           dataTTL = Integer.parseInt(config.getProperty("so_datattl"));
