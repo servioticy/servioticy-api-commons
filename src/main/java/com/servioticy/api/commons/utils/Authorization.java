@@ -16,6 +16,7 @@
 package com.servioticy.api.commons.utils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -38,120 +39,100 @@ import de.passau.uni.sec.compose.pdp.servioticy.exception.PDPServioticyException
  * Class to manage REST API Authorization
  */
 public class Authorization {
-//  private ResultSet rs;
-  private String autorizationToken;
+    private String userId;
+    private String authToken;
 
-  protected static ObjectMapper mapper = new ObjectMapper();
+    protected static ObjectMapper mapper = new ObjectMapper();
 
-  private static Logger LOG = org.apache.log4j.Logger.getLogger(Authorization.class);
+    private static Logger LOG = org.apache.log4j.Logger.getLogger(Authorization.class);
 
-  public Authorization() {}
-
-  public Authorization(MultivaluedMap<String, String> headerParams) {
-    // Check if exists request header Authorization
-    autorizationToken = headerParams.getFirst("Authorization");
-    if (autorizationToken == null)
-      throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "Missing Authorization Header");
-  }
-  
-  public String getAcces_Token() {
-      return autorizationToken;
-  }
-
-  public String getUserId() {
-	  PDP pdp = new LocalPDP();
-	  PermissionCacheObject ret;
-
-	  pdp.setIdmHost(Config.idm_host);
-	  pdp.setIdmPort(Config.idm_port);
-	  pdp.setIdmUser(Config.idm_user);
-	  pdp.setIdmPassword(Config.idm_password);
-
-	  try {
-        ret = pdp.checkAuthorization(autorizationToken, null, null, null, PDP.operationID.GetUserInfo);
-      } catch (PDPServioticyException e) {
-        throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
-                e.getMessage());
-      }
-      return ret.getUserId();
-  }
-
-  public void checkAuthorization(SO so, PDP.operationID opID) {
-	try {
-	  PDP pdp = new LocalPDP();
-	  PermissionCacheObject ret;
-
-	  pdp.setIdmHost(Config.idm_host);
-	  pdp.setIdmPort(Config.idm_port);
-	  pdp.setIdmUser(Config.idm_user);
-	  pdp.setIdmPassword(Config.idm_password);
-
-//	  pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
-	  ret = pdp.checkAuthorization(autorizationToken, so.getSecurity(), null, null, opID);
-	  if (ret.isPermission() == false) {
-              throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED,
-                              "Authentication failed, wrong credentials");
-	  }
-	} catch (PDPServioticyException e) {
-      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
-    		  e.getMessage());
-	}
-  }
-  
-  public JsonNode checkAuthorizationPutSU(SO so, String streamId, String body) {
-    JsonNode root;
-    try {
-        root = mapper.readTree(body);
-    } catch (JsonProcessingException e) {
-		LOG.error(e);
-		throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
-    } catch (IOException e) {
-		LOG.error(e);
-		throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+    public Authorization() {
     }
 
-	PDP pdp = new LocalPDP();
+    public Authorization(MultivaluedMap<String, String> headerParams) {
+        // Check if exists request header Authorization
+        authToken = headerParams.getFirst("Authorization");
+        if (authToken == null)
+            throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, "Missing Authorization Header");
+        
+        // Obtain the userId
+        try {
+            userId = Config.mySQL.getUserId(authToken);
+            if (userId == null)
+                throw new ServIoTWebApplicationException(Response.Status.FORBIDDEN, null);
+        } catch (SQLException e) {
+			LOG.error("SQLException: " + e.getMessage());
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 
-	pdp.setIdmHost(Config.idm_host);
-	pdp.setIdmPort(Config.idm_port);
-	pdp.setIdmUser(Config.idm_user);
-	pdp.setIdmPassword(Config.idm_password);
-	pdp.setServioticyPrivateHost(Config.encription_url);
+    public String getUserId() {
+        return userId;
+    }
 
-	PermissionCacheObject pco = new PermissionCacheObject();
-    try {
-		pco = pdp.GenericSendDatatoServiceObjectProv(autorizationToken, so.getSecurity(), null, null,
-		        streamId, root);
-	} catch (PDPServioticyException e) {
-      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
-    		  e.getMessage());
-	}
+    public String getAcces_Token() {
+        return authToken;
+    }
+
+    public void checkAuthorization(SO so) {
+        if (!so.getUserId().equals(userId) && !so.isPublic()) {
+            throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized to access SO");
+        }
+    }
     
-    JsonNode ret = pco.getDecryptedUpdate();
-    ((ObjectNode)ret).put("security", pco.getSecurityMetaData());
+    public void checkOwner(SO so) {
+        if (!so.getUserId().equals(userId)) {
+            throw new ServIoTWebApplicationException(Response.Status.UNAUTHORIZED, "Not authorized to access SO");
+        }
+    }
 
-    return ret;
-  }
+    public JsonNode checkAuthorizationPutSU(SO so, String streamId, String body) {
+        JsonNode root;
+        try {
+            root = mapper.readTree(body);
+        } catch (JsonProcessingException e) {
+            LOG.error(e);
+            throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (IOException e) {
+            LOG.error(e);
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
 
-  public PermissionCacheObject checkAuthorizationData(SO so, JsonNode su_secutiry, PermissionCacheObject pco, PDP.operationID opID) {
-	PDP pdp = new LocalPDP();
+        PDP pdp = new LocalPDP();
 
-	pdp.setIdmHost(Config.idm_host);
-	pdp.setIdmPort(Config.idm_port);
-	pdp.setIdmUser(Config.idm_user);
-	pdp.setIdmPassword(Config.idm_password);
+        pdp.setIdmHost(Config.idm_host);
+        pdp.setIdmPort(Config.idm_port);
+        pdp.setIdmUser(Config.idm_user);
+        pdp.setIdmPassword(Config.idm_password);
+        pdp.setServioticyPrivateHost(Config.encription_url);
 
-	try {
-      return pdp.checkAuthorization(autorizationToken, so.getSecurity(), su_secutiry,
-    		  pco, opID);
-	} catch (PDPServioticyException e) {
-      throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()),
-    		  e.getMessage());
-	}
-  }
+        PermissionCacheObject pco = new PermissionCacheObject();
+        try {
+            pco = pdp.GenericSendDatatoServiceObjectProv(authToken, so.getSecurity(), null, null, streamId,
+                    root);
+        } catch (PDPServioticyException e) {
+            throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()), e.getMessage());
+        }
 
-//  public String getUserId() {
-//    return userId;
-//  }
+        JsonNode ret = pco.getDecryptedUpdate();
+        ((ObjectNode) ret).put("security", pco.getSecurityMetaData());
 
+        return ret;
+    }
+
+    public PermissionCacheObject checkAuthorizationData(SO so, JsonNode su_secutiry, PermissionCacheObject pco,
+            PDP.operationID opID) {
+        PDP pdp = new LocalPDP();
+
+        pdp.setIdmHost(Config.idm_host);
+        pdp.setIdmPort(Config.idm_port);
+        pdp.setIdmUser(Config.idm_user);
+        pdp.setIdmPassword(Config.idm_password);
+
+        try {
+            return pdp.checkAuthorization(authToken, so.getSecurity(), su_secutiry, pco, opID);
+        } catch (PDPServioticyException e) {
+            throw new ServIoTWebApplicationException(Response.Status.fromStatusCode(e.getStatus()), e.getMessage());
+        }
+    }
 }

@@ -62,7 +62,7 @@ public class Subscription {
    * @param streamId
    * @param body
    */
-  public Subscription(String accessToken, String userId, SO so, String streamId, String body) {
+  public Subscription(String authToken, String userId, SO so, String streamId, String body) {
     JsonNode root;
 
     soParent = so;
@@ -109,7 +109,7 @@ public class Subscription {
 
     // destination of pubsub subscription is the userId
     if (root.get("callback").asText().equals("pubsub")) {
-        String destination = IDM.random_auth_token(accessToken);
+        String destination = IDM.random_auth_token(authToken);
         if (SearchEngine.getRepeatedSubscriptions(destination, soParent.getId(), "pubsub", streamId) > 0)
             throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Duplicated pubsub subscription");
 

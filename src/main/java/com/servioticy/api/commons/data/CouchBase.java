@@ -56,14 +56,13 @@ public class CouchBase {
     }
 
     public static void setSO(SO so) {
-        // TODO check to insert unique so_id
         try {
             // Asynchronous set
             OperationFuture<Boolean> setOp = cli_so.set(so.getSOKey(), 0, so.getString());
 
-//            if (!setOp.get().booleanValue())
             if (!setOp.get().booleanValue())
-                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error accessing CouchBase");
+                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                        "Error accessing CouchBase");
 
         } catch (InterruptedException | ExecutionException e) {
             LOG.error(e.getMessage(), e);
@@ -91,7 +90,8 @@ public class CouchBase {
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: " + e.getMessage());
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                    "Accessing the view: " + e.getMessage());
         }
 
         ObjectMapper mapper = new ObjectMapper();
@@ -106,7 +106,6 @@ public class CouchBase {
         return str_sos;
     }
 
-
     /**
      * @param userId
      * @return all the Service Objects as String
@@ -114,11 +113,12 @@ public class CouchBase {
     public static String getAllSOs(String userId) {
         ArrayList<String> sos = new ArrayList<String>();
 
-
         try {
             View view = cli_so.getView("user", "byUser");
             Query query = new Query();
-            query.setStale(Stale.FALSE);
+            query.setStale(Stale.FALSE)
+                 .setKey(userId);
+
             ViewResponse result = cli_so.query(view, query);
             for (ViewRow row : result) {
                 if (row.getKey() != null && row.getKey().equals(userId))
@@ -126,20 +126,20 @@ public class CouchBase {
             }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Accessing the view: " + e.getMessage());
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                    "Accessing the view: " + e.getMessage());
         }
 
-
         ObjectMapper mapper = new ObjectMapper();
-        String str_sos;
+        String strSOs;
         try {
-            str_sos = mapper.writeValueAsString(sos);
+            strSOs = mapper.writeValueAsString(sos);
         } catch (JsonProcessingException e) {
             LOG.error(e.getMessage(), e);
             throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
         }
 
-        return str_sos;
+        return strSOs;
     }
 
     /**
@@ -155,7 +155,8 @@ public class CouchBase {
         return null;
     }
 
-    /** Store the new subscriptions
+    /**
+     * Store the new subscriptions
      *
      * @param subs
      */
@@ -164,7 +165,8 @@ public class CouchBase {
             OperationFuture<Boolean> setOp;
             setOp = cli_subscriptions.set(subs.getKey(), 0, subs.getString());
             if (!setOp.get().booleanValue()) {
-                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing subscription document");
+                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                        "Error storing subscription document");
             }
 
         } catch (InterruptedException | ExecutionException e) {
@@ -176,7 +178,8 @@ public class CouchBase {
         }
     }
 
-    /** Store new data
+    /**
+     * Store new data
      *
      * @param data
      */
@@ -190,7 +193,8 @@ public class CouchBase {
             do {
                 if (backoffexp > tries) {
                     LOG.error("Could not perform a set in CB after " + tries + " tries.");
-                    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing data in CouchBase");
+                    throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                            "Error storing data in CouchBase");
                 }
                 setOp = cli_data.set(data.getKey(), data.getExpiration(), data.getString());
                 status = setOp.getStatus();
@@ -221,8 +225,8 @@ public class CouchBase {
         }
     }
 
-
-    /** Store new actuation
+    /**
+     * Store new actuation
      *
      * @param actuation
      */
@@ -231,7 +235,8 @@ public class CouchBase {
             OperationFuture<Boolean> setOp;
             setOp = cli_actuations.set(actuation.getId(), 0, actuation.getStatus());
             if (!setOp.get().booleanValue()) {
-                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error storing actuation in CouchBase");
+                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                        "Error storing actuation in CouchBase");
             }
 
         } catch (InterruptedException | ExecutionException e) {
@@ -255,7 +260,6 @@ public class CouchBase {
         return null;
     }
 
-
     /**
      * @param dataId
      * @return
@@ -276,7 +280,8 @@ public class CouchBase {
      */
     public static Data getData(String soId, String streamId, long timestamp) {
         String dataId = soId + "-" + streamId + "-" + timestamp;
-        System.out.println("Searching for " + dataId); // TODO [David] system.out.println???
+        System.out.println("Searching for " + dataId); // TODO [David]
+                                                       // system.out.println???
         String storedData = (String) cli_data.get(dataId);
         if (storedData != null) {
             return new Data(dataId, storedData);
@@ -293,9 +298,11 @@ public class CouchBase {
     public static Data getData(SO so, String streamId) {
 
         JsonNode stream = so.getStream(streamId);
-        if (stream == null) return null;
+        if (stream == null)
+            return null;
 
-        if (stream.path("data").isMissingNode()) return null;
+        if (stream.path("data").isMissingNode())
+            return null;
         String dataId = stream.get("data").asText();
         JsonNode storedJsonData = getJsonNode(dataId);
         String storedData = (storedJsonData != null) ? storedJsonData.toString() : null;
@@ -310,7 +317,6 @@ public class CouchBase {
         cli_data.delete(id);
     }
 
-
     public static void deleteSO(String id) {
         cli_so.delete(id);
     }
@@ -320,7 +326,8 @@ public class CouchBase {
             // Asynchronous delete
             OperationFuture<Boolean> deleteOp = cli_subscriptions.delete(subsKey);
             if (!deleteOp.get().booleanValue()) {
-                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, "Error deleting subscription from CouchBase");
+                throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
+                        "Error deleting subscription from CouchBase");
             }
         } catch (InterruptedException | ExecutionException e) {
             LOG.error(e.getMessage(), e);

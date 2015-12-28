@@ -265,11 +265,16 @@ public class SearchEngine {
 
     public static List<String> getAllUpdatesId(String soId, String streamId) {
 
-        SearchResponse scan = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
-                .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
-                .setSearchType(SearchType.SCAN)
-                .setScroll(new TimeValue(60000))
-                .execute().actionGet();
+        SearchResponse scan; 
+        try {
+            scan = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
+                    .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))
+                    .setSearchType(SearchType.SCAN)
+                    .setScroll(new TimeValue(60000))
+                    .execute().actionGet();
+        } catch (Exception e) {
+            throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
 
         SearchResponse response = client.prepareSearch(soupdates).setTypes("couchbaseDocument")
                 .setQuery(QueryBuilders.prefixQuery("meta.id", soId + "-" + streamId + "-"))

@@ -35,7 +35,7 @@ public class Reputation {
 					"},"+
 					"\"su\": " + lastUpdate +
 				"}";
-		// Now send root to Dispatcher
+/*		// Now send root to Dispatcher
 		QueueClient sqc; //soid, streamid, body
 		try {
 			sqc = QueueClient.factory("reputationq.xml");
@@ -59,6 +59,6 @@ public class Reputation {
 			throw new ServIoTWebApplicationException(Response.Status.INTERNAL_SERVER_ERROR,
 					"Undefined error in SQueueClient");
 		}
-		
+*/		
 	}
 }

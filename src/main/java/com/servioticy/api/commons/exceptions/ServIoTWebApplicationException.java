@@ -21,10 +21,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-public class ServIoTWebApplicationException extends WebApplicationException{
-  private static final long serialVersionUID = -7634740164511860950L;
+public class ServIoTWebApplicationException extends WebApplicationException {
+    private static final long serialVersionUID = -7634740164511860950L;
 
-  public ServIoTWebApplicationException(Response.Status status, String message) {
+    public ServIoTWebApplicationException(Response.Status status, String message) {
         super(Response.status(status)
                 .entity(new ErrorInfo(status.getStatusCode(), message))
                 .type(MediaType.APPLICATION_JSON)

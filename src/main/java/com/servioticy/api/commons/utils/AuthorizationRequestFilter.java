@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 Barcelona Supercomputing Center (BSC)
+ * Copyright 2016 Barcelona Supercomputing Center (BSC)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,25 +21,21 @@ import javax.ws.rs.core.Context;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
 
-// [font] http://arnavawasthi.blogspot.co.uk/2011/09/writing-custom-filter-for-jersey.html
-// [font] http://stackoverflow.com/questions/14287734/how-to-pass-data-from-containerrequestfilter-to-resource-in-jersey-framework
+public class AuthorizationRequestFilter implements ContainerRequestFilter {
+    @Context
+    private transient HttpServletRequest servletRequest;
 
-public class AuthorizationRequestFilter implements ContainerRequestFilter{
-  @Context
-  private transient HttpServletRequest servletRequest;
+    @Override
+    public ContainerRequest filter(ContainerRequest request) {
 
-  @Override
-  public ContainerRequest filter(ContainerRequest request) {
+        if (!request.getMethod().equals(("OPTIONS"))) {
+            // Obtain the authorization
+            Authorization aut = new Authorization(request.getRequestHeaders());
 
-    if (!request.getMethod().equals(("OPTIONS"))) {
-      // Obtain the authorization
-      Authorization aut = new Authorization(request.getRequestHeaders());
+            this.servletRequest.setAttribute("aut", aut);
+        }
 
-//      this.servletRequest.setAttribute("userId", aut.getUserId());
-      this.servletRequest.setAttribute("aut", aut);
+        return request;
     }
-
-    return request;
-  }
 
 }
