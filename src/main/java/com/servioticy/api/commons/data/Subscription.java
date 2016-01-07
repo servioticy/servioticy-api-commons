@@ -107,9 +107,21 @@ public class Subscription {
     ((ObjectNode)subsRoot).put("callback", root.get("callback").asText());
     ((ObjectNode)subsRoot).put("source", soParent.getId());
 
+//    // destination of pubsub subscription is the userId
+//    if (root.get("callback").asText().equals("pubsub")) {
+//        String destination = IDM.random_auth_token(authToken);
+//        if (SearchEngine.getRepeatedSubscriptions(destination, soParent.getId(), "pubsub", streamId) > 0)
+//            throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Duplicated pubsub subscription");
+//
+//      ((ObjectNode)subsRoot).put("destination", destination);
+//    }
+//    else{
+//      ((ObjectNode)subsRoot).put("destination", root.get("destination").asText());
+//    }
     // destination of pubsub subscription is the userId
     if (root.get("callback").asText().equals("pubsub")) {
-        String destination = IDM.random_auth_token(authToken);
+//        String destination = root.get("destination").asText();
+        String destination = authToken;
         if (SearchEngine.getRepeatedSubscriptions(destination, soParent.getId(), "pubsub", streamId) > 0)
             throw new ServIoTWebApplicationException(Response.Status.BAD_REQUEST, "Duplicated pubsub subscription");
 

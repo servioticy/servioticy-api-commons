@@ -22,7 +22,7 @@ public class IDM {
     // Headers:
     // Authorization: Bearer {auth_token}
 
-    public static JsonNode PostSO(String auth_token, String soId, boolean requires_token,
+/*    public static JsonNode PostSO(String auth_token, String soId, boolean requires_token,
             boolean data_provenance_collection, boolean payment, String host, int port) {
 
         IDMCommunicator com = new IDMCommunicator(Config.idm_user, Config.idm_password, host, port);
@@ -76,8 +76,8 @@ public class IDM {
 
         return null;
     }
-
-    public static void DeleteSO(String auth_token, String soId, String host, int port) {
+*/
+/*    public static void DeleteSO(String auth_token, String soId, String host, int port) {
 
         IDMCommunicator com = new IDMCommunicator(Config.idm_user, Config.idm_password, host, port);
 
@@ -100,7 +100,7 @@ public class IDM {
         }
 
     }
-
+*/
     public static String random_auth_token(String accessToken) {
         ObjectMapper mapper = new ObjectMapper();
 

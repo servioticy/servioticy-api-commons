@@ -70,6 +70,25 @@ public class MySQL {
         return authToken;
     }
 
+    public String userIdGetToken(String userId) throws SQLException {
+        String authToken = null;
+
+        try {
+            preparedStatement = conn.prepareStatement("SELECT * FROM User WHERE id = ?");
+            preparedStatement.setString(1, userId);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                authToken = resultSet.getString("auth_token");
+            } 
+
+        } finally {
+            close();
+        }
+
+        return authToken;
+    }
+
     public String getUserId(String authToken) throws SQLException {
         String userId = null;
 
