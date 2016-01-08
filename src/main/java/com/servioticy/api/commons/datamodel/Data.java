@@ -20,6 +20,7 @@ import java.util.List;
 
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -102,8 +103,8 @@ public class Data {
 
 	  ((ObjectNode)dataRoot).putAll((ObjectNode)root);
 
-	  dataKey= soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
-	  
+      dataKey = soParent.getId() + "-" + streamId + "-" + root.get("lastUpdate").asLong();
+
 	  int dataTTL = so.getDataTTL();
 	  if (dataTTL == -1) {
 	      expirationTime = 0;
@@ -165,6 +166,24 @@ public class Data {
     res.append("]}");
 
     return res.toString();
+  }
+
+  public void setInitProvenance(String soId, String streamId){
+
+      ArrayNode provenance = mapper.createArrayNode();
+      ArrayNode provenancePath = mapper.createArrayNode();
+      ObjectNode provenanceUnit = mapper.createObjectNode();
+
+      provenanceUnit.put("soId", soId);
+      provenanceUnit.put("streamId", streamId);
+      provenanceUnit.put("suId", dataKey);
+      provenanceUnit.put("timestamp", dataRoot.path("lastUpdate").asLong());
+
+      provenancePath.add(provenanceUnit);
+      provenance.add(provenancePath);
+
+      ((ObjectNode) dataRoot).put("provenance", provenance);
+
   }
 
   /**
